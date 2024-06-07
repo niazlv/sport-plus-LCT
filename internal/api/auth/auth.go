@@ -70,7 +70,10 @@ func getSignin(c *gin.Context) {
 
 	if User.Login == login && User.Password == passwd {
 		token := createToken(User)
-		c.JSON(http.StatusOK, gin.H{"token": token})
+		c.JSON(http.StatusOK, gin.H{
+			"token": token,
+			"user":  User,
+		})
 		return
 	}
 
