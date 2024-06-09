@@ -23,7 +23,7 @@ type User struct {
 	Beginner         bool
 	GymName          string
 	HealthConditions string
-	Role             int
+	Role             int `json:"role"`
 }
 
 var db *gorm.DB
@@ -59,7 +59,6 @@ func InitDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-// FindUserByLogin ...
 func FindUserByLogin(login string) (*User, error) {
 	var user User
 	result := db.Where("login = ?", login).First(&user)
@@ -72,7 +71,6 @@ func FindUserByLogin(login string) (*User, error) {
 	return &user, nil
 }
 
-// CreateUser ...
 func CreateUser(user *User) (*User, error) {
 	result := db.Create(user)
 	if result.Error != nil {
@@ -81,7 +79,6 @@ func CreateUser(user *User) (*User, error) {
 	return user, nil
 }
 
-// FindUserByID ...
 func FindUserByID(id int) (*User, error) {
 	var user User
 	result := db.Where("id = ?", id).First(&user)
@@ -94,7 +91,6 @@ func FindUserByID(id int) (*User, error) {
 	return &user, nil
 }
 
-// UpdateUserName обновляет имя пользователя по ID.
 func UpdateUserName(userId int, newName string) error {
 	result := db.Model(&User{}).Where("id = ?", userId).Update("name", newName)
 	if result.Error != nil {
