@@ -5,11 +5,13 @@ This is SPORT+ app backend for LCT hackaton 2024.
 ## How to run app
 
 Clone repo:
+
 ```bash
 git clone https://github.com/niazlv/sport-plus-LCT.git
 ```
 
 Go into it:
+
 ```bash
 cd sport-plus-LCT.git
 ```
@@ -58,3 +60,6 @@ Now you can access to Backend by: http://localhost:8080/v1
 - [ ] fizz/tonic. Починить коды ошибок.
 - [x] README.md. Дописать открытую документацию на запуск и о проекте, что использую.
 - [x] Перенести TODO LIST в проект
+- [ ] Переписать docker
+  - [ ] docker file
+  - [ ] docker compose

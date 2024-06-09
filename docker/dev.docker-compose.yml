@@ -1,5 +1,6 @@
 services:
   app:
+    image: gitlab.sorewa.ru:5050/niaz/sport-plus-lct:latest
     build:
       context: ..
       dockerfile: docker/dev.Dockerfile
