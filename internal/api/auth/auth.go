@@ -95,6 +95,7 @@ func postSignup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "password can't be null"})
 		return
 	}
+
 	User, err := database.FindUserByLogin(creds.Login)
 	if err != nil {
 		log.Println("ERROR postSignup(): ", err)
@@ -108,6 +109,7 @@ func postSignup(c *gin.Context) {
 	user := database.User{
 		Login:    creds.Login,
 		Password: creds.Password,
+		Role:     creds.Role, //1 - trainer ,0 - User
 	}
 
 	_, err = database.CreateUser(&user)

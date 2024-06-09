@@ -23,6 +23,7 @@ type User struct {
 	Beginner         bool
 	GymName          string
 	HealthConditions string
+	Role             int
 }
 
 var db *gorm.DB
