@@ -63,3 +63,8 @@ Now you can access to Backend by: http://localhost:8080/v1
 - [ ] Переписать docker
   - [ ] docker file
   - [ ] docker compose
+
+## links
+
+- [lct site](https://i.moscow/cabinet/lct/profile/my-teams)
+- [Sport+ mobile app src](https://github.com/justmeowme/sport_app_lct)
