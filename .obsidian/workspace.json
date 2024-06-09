@@ -147,5 +147,7 @@
     }
   },
   "active": "f24f15867095ecac",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "docker/storage/pg_stat_tmp/global.tmp"
+  ]
 }
