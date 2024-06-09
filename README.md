@@ -2,6 +2,12 @@
 
 This is SPORT+ app backend for LCT hackaton 2024.
 
+## Main Development
+
+The main development of this project is conducted on GitLab. You can find the latest updates and contribute to the project by visiting our GitLab repository:
+
+[Sport Plus LCT on GitLab](https://gitlab.sorewa.ru:12345/niaz/sport-plus-LCT)
+
 ## How to run app
 
 Clone repo:
