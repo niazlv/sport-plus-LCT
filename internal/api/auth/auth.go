@@ -9,6 +9,7 @@ import (
 
 	"github.com/niazlv/sport-plus-LCT/internal/config"
 	database "github.com/niazlv/sport-plus-LCT/internal/database/auth"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,16 @@ var db *gorm.DB
 
 var secretKey = []byte("my-secret-key-public")
 
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
 func Setup(rg *gin.RouterGroup) {
 	var err error
 	db, err = database.InitDB()
@@ -27,13 +38,15 @@ func Setup(rg *gin.RouterGroup) {
 	}
 
 	cfg, err := config.LoadConfig()
-	if err == nil {
+	if err != nil {
+		log.Fatal("Load config error!", err)
+	}
+
+	// reload secretKey from config, if he exist's
+	if cfg.JWTSecret != "" {
 		secretKey = []byte(cfg.JWTSecret)
 	}
 
-	if err != nil {
-		log.Fatal(err)
-	}
 	// defer db.Close()
 
 	// Users = []database.User{
@@ -68,7 +81,7 @@ func getSignin(c *gin.Context) {
 		return
 	}
 
-	if User.Login == login && User.Password == passwd {
+	if User.Login == login && (CheckPasswordHash(passwd, User.Password) || passwd == User.Password) {
 		token := createToken(User)
 		c.JSON(http.StatusOK, gin.H{
 			"token": token,
@@ -106,6 +119,14 @@ func postSignup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "user with this login is already created"})
 		return
 	}
+	creds.Password, err = HashPassword(creds.Password)
+
+	if err != nil {
+		log.Println("ERROR postSignup(), hashing password: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Password hashing error!"})
+		return
+	}
+
 	user := database.User{
 		Login:    creds.Login,
 		Password: creds.Password,

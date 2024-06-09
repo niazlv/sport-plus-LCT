@@ -12,7 +12,7 @@ import (
 
 type User struct {
 	Id               int    `gorm:"primaryKey"`
-	Login            string `gorm:"unique", json:"login"`
+	Login            string `gorm:"unique" json:"login"`
 	Password         string `json:"password"`
 	Gender           string
 	Height           int
