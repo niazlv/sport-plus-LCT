@@ -14,16 +14,16 @@ type User struct {
 	Id               int    `gorm:"primaryKey"`
 	Login            string `gorm:"unique" json:"login"`
 	Password         string `json:"password"`
-	Gender           string
-	Height           int
-	Weight           int
-	Goals            string
-	Experience       string
-	GymMember        bool
-	Beginner         bool
-	GymName          string
-	HealthConditions string
-	Role             int `json:"role"`
+	Gender           string `json:"gender"`
+	Height           int    `json:"height"`
+	Weight           int    `json:"weight"`
+	Goals            string `json:"goals"`
+	Experience       string `json:"experience"`
+	GymMember        bool   `json:"gymMember"`
+	Beginner         bool   `json:"beginner"`
+	GymName          string `json:"gymName"`
+	HealthConditions string `json:"healthConditions"`
+	Role             int    `json:"role"`
 }
 
 var db *gorm.DB
