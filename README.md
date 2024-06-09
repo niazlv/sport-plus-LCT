@@ -76,7 +76,7 @@ This project is currently in the development stage and is intended for the LCT h
 - [ ] вынести участки кода в пакеты(user,auth)
 - [ ] JWT вынести из(auth)
 - [ ] JWT tokens переделать под RS256
-- [ ] добавить /auth/onboarding? (database.User) PUT
+- [x] добавить /auth/onboarding? (database.User) PUT
 - [ ] fizz/tonic. Починить коды ошибок.
 - [x] README.md. Дописать открытую документацию на запуск и о проекте, что использую.
 - [x] Перенести TODO LIST в проект
