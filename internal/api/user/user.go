@@ -8,6 +8,7 @@ import (
 	"github.com/niazlv/sport-plus-LCT/internal/api/auth"
 	database "github.com/niazlv/sport-plus-LCT/internal/database/auth"
 	"github.com/wI2L/fizz"
+	"gorm.io/gorm"
 )
 
 type JWTAuthSecurityType struct {
@@ -17,23 +18,12 @@ type JWTAuthSecurityType struct {
 	Scheme       string
 }
 
-// example authenticatedHandler(v1, "GET", "/protected", "Protected endpoint", getProtected)
-// func authenticatedHandler(group *fizz.RouterGroup, method, path, summary string, handler interface{}) {
-// 	group.Handle(method, path, []fizz.OperationOption{
-// 		fizz.Summary(summary),
-// 		fizz.Security(&openapi.SecurityRequirement{
-// 			"BearerAuth": {},
-// 		}),
-// 	}, tonic.Handler(handler, 200))
-// }
-
 func Setup(rg *fizz.RouterGroup) {
 	api := rg.Group("user", "User", "User related endpoints")
 
 	_ = api
 	api.GET("", []fizz.OperationOption{fizz.Summary("Return User"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetUser, 200))
-
-	//api.GET("", []fizz.OperationOption{fizz.Summary("Check auth status")}, WithAuth, tonic.Handler(getGet, 200))
+	api.PUT("/onboarding", []fizz.OperationOption{fizz.Summary("Update User data after onboarding"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(putOnboarding, 200))
 }
 
 type GetUserOutput struct {
@@ -55,4 +45,50 @@ func GetUser(c *gin.Context) (*GetUserOutput, error) {
 	return &GetUserOutput{
 		User: *User,
 	}, nil
+}
+
+type putOnboardingOutput struct {
+	Status string `json:"status"`
+}
+
+func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, error) {
+	// get data from token
+	claims := c.MustGet("claims").(jwt.MapClaims)
+	userClaims, err := auth.ExtractClaims(claims)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	// Преобразуем входные данные в структуру User
+	user := database.User{
+		Id:               userClaims.ID,
+		Gender:           in.Gender,
+		Height:           in.Height,
+		Weight:           in.Weight,
+		Goals:            in.Goals,
+		Experience:       in.Experience,
+		GymMember:        in.GymMember,
+		Beginner:         in.Beginner,
+		GymName:          in.GymName,
+		HealthConditions: in.HealthConditions,
+		Role:             in.Role,
+	}
+
+	// Обновляем пользователя в базе данных
+	if err := database.PartialUpdateUser(&user); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, gin.Error{
+				Err:  err,
+				Type: gin.ErrorTypePublic,
+				Meta: gin.H{"error": "user not found"},
+			}
+		}
+		return nil, gin.Error{
+			Err:  err,
+			Type: gin.ErrorTypePrivate,
+			Meta: gin.H{"error": err.Error()},
+		}
+	}
+
+	return &putOnboardingOutput{Status: "user updated successfully"}, nil
 }

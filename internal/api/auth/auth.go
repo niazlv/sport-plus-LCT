@@ -111,8 +111,8 @@ type getSigninOutput struct {
 }
 
 type getSigninInput struct {
-	Login    string `json:"login" query:"login"`
-	Password string `json:"password" query:"password"`
+	Login    string `json:"login" query:"login" validate:"required"`
+	Password string `json:"password" query:"password" validate:"required"`
 }
 
 func getSignin(c *gin.Context, in *getSigninInput) (*getSigninOutput, error) {
@@ -143,8 +143,8 @@ func getSignin(c *gin.Context, in *getSigninInput) (*getSigninOutput, error) {
 }
 
 type postSignupInput struct {
-	Login    string `json:"login" body:"login"`
-	Password string `json:"password" body:"password"`
+	Login    string `json:"login" body:"login" validate:"required"`
+	Password string `json:"password" body:"password" validate:"required"`
 	Role     int    `json:"role" body:"role" default:"0"`
 }
 

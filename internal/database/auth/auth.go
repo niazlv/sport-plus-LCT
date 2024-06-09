@@ -11,19 +11,19 @@ import (
 )
 
 type User struct {
-	Id               int    `gorm:"primaryKey"`
-	Login            string `gorm:"unique" json:"login"`
-	Password         string `json:"password"`
-	Gender           string `json:"gender"`
-	Height           int    `json:"height"`
-	Weight           int    `json:"weight"`
-	Goals            string `json:"goals"`
-	Experience       string `json:"experience"`
-	GymMember        bool   `json:"gymMember"`
-	Beginner         bool   `json:"beginner"`
-	GymName          string `json:"gymName"`
-	HealthConditions string `json:"healthConditions"`
-	Role             int    `json:"role"`
+	Id               int    `gorm:"primaryKey" json:"id" body:"id"`
+	Login            string `gorm:"unique" json:"login" body:"login"`
+	Password         string `json:"password" body:"password"`
+	Gender           string `json:"gender" body:"gender"`
+	Height           int    `json:"height" body:"height"`
+	Weight           int    `json:"weight" body:"weight"`
+	Goals            string `json:"goals" body:"goals"`
+	Experience       string `json:"experience" body:"experience"`
+	GymMember        bool   `json:"gymMember" body:"gymMember"`
+	Beginner         bool   `json:"beginner" body:"beginner"`
+	GymName          string `json:"gymName" body:"gymName"`
+	HealthConditions string `json:"healthConditions" body:"healthConditions"`
+	Role             int    `json:"role" body:"role"`
 }
 
 var db *gorm.DB
@@ -93,6 +93,68 @@ func FindUserByID(id int) (*User, error) {
 
 func UpdateUserName(userId int, newName string) error {
 	result := db.Model(&User{}).Where("id = ?", userId).Update("name", newName)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func UpdateUser(user *User) error {
+	result := db.Model(&User{}).Where("id = ?", user.Id).Updates(user)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+// PartialUpdateUser updates the user record with the provided data, ignoring zero-value fields
+func PartialUpdateUser(user *User) error {
+	updates := make(map[string]interface{})
+
+	if user.Login != "" {
+		updates["login"] = user.Login
+	}
+	if user.Password != "" {
+		updates["password"] = user.Password
+	}
+	if user.Gender != "" {
+		updates["gender"] = user.Gender
+	}
+	if user.Height != 0 {
+		updates["height"] = user.Height
+	}
+	if user.Weight != 0 {
+		updates["weight"] = user.Weight
+	}
+	if user.Goals != "" {
+		updates["goals"] = user.Goals
+	}
+	if user.Experience != "" {
+		updates["experience"] = user.Experience
+	}
+	if user.GymMember {
+		updates["gym_member"] = user.GymMember
+	}
+	if user.Beginner {
+		updates["beginner"] = user.Beginner
+	}
+	if user.GymName != "" {
+		updates["gym_name"] = user.GymName
+	}
+	if user.HealthConditions != "" {
+		updates["health_conditions"] = user.HealthConditions
+	}
+	if user.Role != 0 {
+		updates["role"] = user.Role
+	}
+
+	result := db.Model(&User{}).Where("id = ?", user.Id).Updates(updates)
 	if result.Error != nil {
 		return result.Error
 	}
