@@ -1,3 +1,4 @@
 docker/storage/
 storage/
 **/*.env
+**/.obsidian/*
