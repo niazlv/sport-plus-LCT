@@ -30,17 +30,24 @@ type Course struct {
 
 // Class модель занятия
 type Class struct {
-	Id          int       `gorm:"primaryKey" json:"id"`
-	CourseID    int       `json:"course_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Cover       string    `json:"cover"`
-	Content     string    `json:"content"`
-	Video       string    `json:"video"`
-	Image       string    `json:"image"`
-	Tips        string    `json:"tips"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Id          int          `gorm:"primaryKey" json:"id"`
+	CourseID    int          `json:"course_id"`
+	Title       string       `json:"title"`
+	Description string       `json:"description"`
+	Cover       string       `json:"cover"`
+	Content     string       `json:"content"`
+	Video       string       `json:"video"`
+	Tips        string       `json:"tips"`
+	Images      []ClassImage `json:"images" gorm:"foreignKey:ClassID"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
+}
+
+// ClassImage модель изображения занятия
+type ClassImage struct {
+	Id      int    `gorm:"primaryKey" json:"id"`
+	ClassID int    `json:"class_id"`
+	Image   string `json:"image"`
 }
 
 var db *gorm.DB
@@ -67,7 +74,7 @@ func InitDB() (*gorm.DB, error) {
 		return nil, errors.New("failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&Course{}, &Class{})
+	err = db.AutoMigrate(&Course{}, &Class{}, &ClassImage{})
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +138,7 @@ func CreateClass(class *Class) (*Class, error) {
 
 func GetClassByID(id int) (*Class, error) {
 	var class Class
-	result := db.Where("id = ?", id).First(&class)
+	result := db.Preload("Images").Where("id = ?", id).First(&class)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -154,6 +161,50 @@ func UpdateClass(class *Class) error {
 
 func DeleteClass(id int) error {
 	result := db.Delete(&Class{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+// CRUD функции для модели ClassImage
+
+func CreateClassImage(classImage *ClassImage) (*ClassImage, error) {
+	result := db.Create(classImage)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return classImage, nil
+}
+
+func GetClassImageByID(id int) (*ClassImage, error) {
+	var classImage ClassImage
+	result := db.Where("id = ?", id).First(&classImage)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &classImage, nil
+}
+
+func UpdateClassImage(classImage *ClassImage) error {
+	result := db.Model(&ClassImage{}).Where("id = ?", classImage.Id).Updates(classImage)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func DeleteClassImage(id int) error {
+	result := db.Delete(&ClassImage{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
