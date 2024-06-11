@@ -17,7 +17,7 @@ import (
 
 // ScheduleInput структура для ввода данных для расписания
 type ScheduleInput struct {
-	ID             string    `path:"schedule_id" binding:"required"`
+	ID             string    `path:"schedule_id"`
 	ClientID       int       `json:"client_id"`
 	Date           time.Time `json:"date"`
 	StartTime      time.Time `json:"start_time"`
