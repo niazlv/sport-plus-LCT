@@ -41,6 +41,8 @@ func Setup(rg *fizz.RouterGroup) {
 		log.Fatal("db courses can't be init: ", err)
 	}
 
+	_ = db
+
 	api.GET("", []fizz.OperationOption{fizz.Summary("Get schedules"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetSchedules, 200))
 	api.GET("/global", []fizz.OperationOption{fizz.Summary("Get global schedules"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetGlobalSchedules, 200))
 	api.GET("/local", []fizz.OperationOption{fizz.Summary("Get local schedules"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetLocalSchedules, 200))

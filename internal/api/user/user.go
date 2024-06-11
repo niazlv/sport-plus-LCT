@@ -22,7 +22,8 @@ func Setup(rg *fizz.RouterGroup) {
 	api := rg.Group("user", "User", "User related endpoints")
 
 	_ = api
-	api.GET("", []fizz.OperationOption{fizz.Summary("Return User"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetUser, 200))
+	api.GET("", []fizz.OperationOption{fizz.Summary("Return Your User"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetUser, 200))
+	api.GET("/:id", []fizz.OperationOption{fizz.Summary("Return User by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetUserByID, 200))
 	api.PUT("/onboarding", []fizz.OperationOption{fizz.Summary("Update User data after onboarding"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(putOnboarding, 200))
 }
 
@@ -39,6 +40,20 @@ func GetUser(c *gin.Context) (*GetUserOutput, error) {
 	}
 
 	User, err := database.FindUserByID(userClaims.ID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	return &GetUserOutput{
+		User: *User,
+	}, nil
+}
+
+type GetUserByIDInput struct {
+	ID int `json:"id" path:"id" validate:"required" binding:"required"`
+}
+
+func GetUserByID(c *gin.Context, in *GetUserByIDInput) (*GetUserOutput, error) {
+	User, err := database.FindUserByID(in.ID)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}

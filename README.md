@@ -85,6 +85,7 @@ This project is currently in the development stage and is intended for the LCT h
   - [ ] docker file
   - [ ] docker compose
 - [ ] Дописать LICENCE
+- [ ] Добавить защит от дурака, при обращении к БД(в частности для auth, user, getUserByID)
 
 ## Links
 
