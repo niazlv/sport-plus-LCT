@@ -21,7 +21,7 @@ deploy:
     - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
     - sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
       cd /root/sport-plus-LCT &&
-      export $(grep -v '^#' env/dev.env | xargs) &&
+      export $(grep -v '^#' /root/sport-plus-LCT/env/dev.env | xargs) &&
       docker compose -f docker/dev.docker-compose.yml down &&
       git pull &&
       docker compose -f docker/dev.docker-compose.yml pull &&
