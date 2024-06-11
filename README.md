@@ -31,6 +31,7 @@ echo "POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres 
 POSTGRES_DB=postgres 
 
+COMPOSE_PROJECT_NAME=sport-plus
 DB_HOST=docker-db-1 
 DB_PORT=5432 
 

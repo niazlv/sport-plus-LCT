@@ -66,7 +66,7 @@ func GetCourses(c *gin.Context) (*CoursesOutput, error) {
 }
 
 func GetCourseByID(c *gin.Context, params *GetCourseByIDParams) (*CourseOutput, error) {
-	id := c.Param("course_id")
+	id := params.ID
 	log.Println("GetCourseByID called with ID:", id)
 
 	var course course.Course
@@ -145,7 +145,7 @@ type UpdateCourseInput struct {
 }
 
 func UpdateCourse(c *gin.Context, in *UpdateCourseInput) (*CourseOutput, error) {
-	id := c.Param("course_id")
+	id := in.ID
 	log.Printf("UpdateCourse called with ID: %s and input: %+v\n", id, in)
 
 	var course course.Course
