@@ -72,7 +72,7 @@ func CheckPasswordHash(password, hash string) bool {
 func Setup(rg *fizz.RouterGroup) {
 	var err error
 	db, err = database.InitDB()
-	if err != nil {
+	if err != nil || db == nil {
 		log.Fatal(err)
 	}
 
