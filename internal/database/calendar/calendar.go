@@ -1,3 +1,4 @@
+// internal/database/calendar/calendar.go
 package calendar
 
 import (
@@ -102,6 +103,42 @@ func DeleteSchedule(id int) error {
 func GetSchedulesByCoachID(coachID int) ([]Schedule, error) {
 	var schedules []Schedule
 	result := db.Where("coach_id = ? OR is_global = ?", coachID, true).Find(&schedules)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return schedules, nil
+}
+
+func GetSchedulesByClientID(clientID int) ([]Schedule, error) {
+	var schedules []Schedule
+	result := db.Where("client_id = ? OR is_global = ?", clientID, true).Find(&schedules)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return schedules, nil
+}
+
+func GetGlobalSchedules() ([]Schedule, error) {
+	var schedules []Schedule
+	result := db.Where("is_global = ?", true).Find(&schedules)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return schedules, nil
+}
+
+func GetLocalSchedulesByCoachID(coachID int) ([]Schedule, error) {
+	var schedules []Schedule
+	result := db.Where("coach_id = ? AND is_global = ?", coachID, false).Find(&schedules)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return schedules, nil
+}
+
+func GetLocalSchedulesByClientID(clientID int) ([]Schedule, error) {
+	var schedules []Schedule
+	result := db.Where("client_id = ? AND is_global = ?", clientID, false).Find(&schedules)
 	if result.Error != nil {
 		return nil, result.Error
 	}

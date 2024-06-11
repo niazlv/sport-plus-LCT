@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/loopfz/gadgeto/tonic"
 	"github.com/niazlv/sport-plus-LCT/internal/api/auth"
+	database "github.com/niazlv/sport-plus-LCT/internal/database/auth"
 	"github.com/niazlv/sport-plus-LCT/internal/database/calendar"
 	"github.com/wI2L/fizz"
 )
@@ -30,11 +31,13 @@ type ScheduleInput struct {
 func Setup(rg *fizz.RouterGroup) {
 	api := rg.Group("calendar", "Calendar", "Calendar related endpoints")
 
-	api.GET("", []fizz.OperationOption{fizz.Summary("Get schedules")}, auth.WithAuth, tonic.Handler(GetSchedules, 200))
-	api.GET("/:schedule_id", []fizz.OperationOption{fizz.Summary("Get schedule by ID")}, auth.WithAuth, tonic.Handler(GetScheduleByID, 200))
-	api.POST("", []fizz.OperationOption{fizz.Summary("Create a new schedule")}, auth.WithAuth, tonic.Handler(CreateSchedule, 201))
-	api.PUT("/:schedule_id", []fizz.OperationOption{fizz.Summary("Update schedule by ID")}, auth.WithAuth, tonic.Handler(UpdateSchedule, 200))
-	api.DELETE("/:schedule_id", []fizz.OperationOption{fizz.Summary("Delete schedule by ID")}, auth.WithAuth, tonic.Handler(DeleteSchedule, 204))
+	api.GET("", []fizz.OperationOption{fizz.Summary("Get schedules"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetSchedules, 200))
+	api.GET("/global", []fizz.OperationOption{fizz.Summary("Get global schedules"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetGlobalSchedules, 200))
+	api.GET("/local", []fizz.OperationOption{fizz.Summary("Get local schedules"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetLocalSchedules, 200))
+	api.GET("/:schedule_id", []fizz.OperationOption{fizz.Summary("Get schedule by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetScheduleByID, 200))
+	api.POST("", []fizz.OperationOption{fizz.Summary("Create a new schedule"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(CreateSchedule, 201))
+	api.PUT("/:schedule_id", []fizz.OperationOption{fizz.Summary("Update schedule by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UpdateSchedule, 200))
+	api.DELETE("/:schedule_id", []fizz.OperationOption{fizz.Summary("Delete schedule by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(DeleteSchedule, 204))
 }
 
 func GetSchedules(c *gin.Context) (*[]calendar.Schedule, error) {
@@ -44,7 +47,53 @@ func GetSchedules(c *gin.Context) (*[]calendar.Schedule, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	schedules, err := calendar.GetSchedulesByCoachID(userClaims.ID)
+	User, err := database.FindUserByID(userClaims.ID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	var schedules []calendar.Schedule
+	if User.Role == 1 { // Тренер
+		schedules, err = calendar.GetSchedulesByCoachID(userClaims.ID)
+	} else { // Пользователь
+		schedules, err = calendar.GetSchedulesByClientID(userClaims.ID)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &schedules, nil
+}
+
+func GetGlobalSchedules(c *gin.Context) (*[]calendar.Schedule, error) {
+	schedules, err := calendar.GetGlobalSchedules()
+	if err != nil {
+		return nil, err
+	}
+
+	return &schedules, nil
+}
+
+func GetLocalSchedules(c *gin.Context) (*[]calendar.Schedule, error) {
+	claims := c.MustGet("claims").(jwt.MapClaims)
+	userClaims, err := auth.ExtractClaims(claims)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	User, err := database.FindUserByID(userClaims.ID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	var schedules []calendar.Schedule
+	if User.Role == 1 { // Тренер
+		schedules, err = calendar.GetLocalSchedulesByCoachID(userClaims.ID)
+	} else { // Пользователь
+		schedules, err = calendar.GetLocalSchedulesByClientID(userClaims.ID)
+	}
+
 	if err != nil {
 		return nil, err
 	}
