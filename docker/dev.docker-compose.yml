@@ -4,7 +4,8 @@ services:
     build:
       context: ..
       dockerfile: docker/dev.Dockerfile
-    container_name: sport-plus-backend-1
+    # container_name: sport-plus-backend-1
+    container_name: "${COMPOSE_PROJECT_NAME}_backend-1"
     env_file:
       - ../env/dev.env
     ports:
@@ -16,7 +17,8 @@ services:
 
   db:
     image: postgres:13
-    container_name: sport-plus-postgres-db-1
+    # container_name: sport-plus-postgres-db-1
+    container_name: "${COMPOSE_PROJECT_NAME}_postgres-db-1"
     env_file:
       - ../env/dev.env
     ports:
