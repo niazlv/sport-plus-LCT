@@ -3,6 +3,7 @@ package calendar
 
 import (
 	"errors"
+	"log"
 	"strconv"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	database "github.com/niazlv/sport-plus-LCT/internal/database/auth"
 	"github.com/niazlv/sport-plus-LCT/internal/database/calendar"
 	"github.com/wI2L/fizz"
+	"gorm.io/gorm"
 )
 
 // ScheduleInput структура для ввода данных для расписания
@@ -28,8 +30,16 @@ type ScheduleInput struct {
 	IsGlobal       bool      `json:"is_global"`
 }
 
+var db *gorm.DB
+
 func Setup(rg *fizz.RouterGroup) {
 	api := rg.Group("calendar", "Calendar", "Calendar related endpoints")
+
+	var err error
+	db, err = calendar.InitDB()
+	if err != nil {
+		log.Fatal("db courses can't be init: ", err)
+	}
 
 	api.GET("", []fizz.OperationOption{fizz.Summary("Get schedules"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetSchedules, 200))
 	api.GET("/global", []fizz.OperationOption{fizz.Summary("Get global schedules"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetGlobalSchedules, 200))
