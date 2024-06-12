@@ -39,11 +39,6 @@ services:
     restart: always
     networks:
       - sport-plus-network
-    environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}
     env_file:
       - ../env/dev.env
 
