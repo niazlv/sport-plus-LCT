@@ -10,6 +10,7 @@ services:
       - ../env/dev.env
     ports:
       - "8080:8000"
+    restart: always
     networks:
       - sport-plus-network
     depends_on:
@@ -23,10 +24,28 @@ services:
       - ../env/dev.env
     ports:
       - "5432:5432"
+    restart: always
     volumes:
       - ./storage:/var/lib/postgresql/data
     networks:
       - sport-plus-network
+  
+  graphql-engine:
+    image: hasura/graphql-engine:latest
+    ports:
+      - "8085:8080"
+    depends_on:
+      - db
+    restart: always
+    networks:
+      - sport-plus-network
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_ADMIN_SECRET}
+    env_file:
+      - ../env/dev.env
 
 networks:
   sport-plus-network:

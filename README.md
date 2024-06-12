@@ -36,6 +36,7 @@ DB_HOST=docker-db-1
 DB_PORT=5432 
 
 JWT_SECRET=my-super-secret-key
+HASURA_ADMIN_SECRET=my-super-secret-password
 " > dev.env
 cd ..
 ```
@@ -48,10 +49,11 @@ docker-compose -f docker/dev.docker-compose.yml up -d --build
 
 Now you can access the backend at: [http://localhost:8080/v1](http://localhost:8080/v1)
 
-## Documentation
+## Documentation and urls
 
 - [openAPI.json](http://sport-plus.sorewa.ru:8080/openapi.json)
 - [Swagger UI](http://sport-plus.sorewa.ru:8080/swagger)
+- [HASURA panel](http://sport-plus.sorewa.ru:8085)
 
 ## Technologies Used
 
