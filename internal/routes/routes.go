@@ -4,6 +4,7 @@ import (
 	"github.com/niazlv/sport-plus-LCT/internal/api/auth"
 	"github.com/niazlv/sport-plus-LCT/internal/api/calendar"
 	"github.com/niazlv/sport-plus-LCT/internal/api/course"
+	"github.com/niazlv/sport-plus-LCT/internal/api/upload"
 	"github.com/niazlv/sport-plus-LCT/internal/api/user"
 	"github.com/wI2L/fizz"
 )
@@ -17,4 +18,5 @@ func Setup(f *fizz.Fizz) {
 	user.Setup(api)
 	course.Setup(api)
 	calendar.Setup(api)
+	upload.SetupUploadRoutes(api)
 }

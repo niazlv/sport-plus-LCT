@@ -50,6 +50,7 @@ func main() {
 	// }, http.StatusOK))
 
 	routes.Setup(f)
+	app.Static("/uploads", "./uploads")
 	// run our server
 	f.Engine().Run(":8000")
 

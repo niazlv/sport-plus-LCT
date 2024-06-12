@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -66,6 +68,10 @@ type CreateClassImageResponse struct {
 	ClassImage ClassImage `json:"class_image"`
 }
 
+type UploadImageResponse struct {
+	URL string `json:"url"`
+}
+
 func ImportCoursesFromJSON(filePath string, apiBaseURL string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -83,7 +89,7 @@ func ImportCoursesFromJSON(filePath string, apiBaseURL string) error {
 		return err
 	}
 
-	imagesFolder := filepath.Dir(filePath) + "/images"
+	imagesFolder := filepath.Dir(filePath)
 
 	// Аутентификация
 	token, err := Authenticate(apiBaseURL, "aboba", "passwd")
@@ -122,10 +128,15 @@ func ImportCoursesFromJSON(filePath string, apiBaseURL string) error {
 		}
 
 		for _, photo := range exercise.Photos {
-			processedPhoto := ProcessImage(imagesFolder + "/" + photo)
+			photoPath := filepath.Join(imagesFolder, photo)
+			uploadedImageURL, err := uploadImage(apiBaseURL, photoPath, token)
+			if err != nil {
+				return err
+			}
+
 			newClassImage := ClassImage{
 				ClassID: classID,
-				Image:   processedPhoto,
+				Image:   uploadedImageURL,
 			}
 
 			log.Printf("Creating class image with data: %+v\n", newClassImage)
@@ -243,4 +254,54 @@ func createClassImage(apiBaseURL string, newClassImage ClassImage, token string)
 	}
 
 	return nil
+}
+
+func uploadImage(apiBaseURL, imagePath, token string) (string, error) {
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", filepath.Base(imagePath))
+	if err != nil {
+		return "", err
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return "", err
+	}
+	writer.Close()
+
+	uploadURL := apiBaseURL + "/upload"
+	req, err := http.NewRequest("POST", uploadURL, body)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		bodyString := string(bodyBytes)
+		log.Printf("Failed to upload image: %s\nResponse Body: %s", resp.Status, bodyString)
+		return "", errors.New("failed to upload image: " + resp.Status)
+	}
+
+	var uploadImageResponse UploadImageResponse
+	err = json.NewDecoder(resp.Body).Decode(&uploadImageResponse)
+	if err != nil {
+		return "", err
+	}
+
+	return uploadImageResponse.URL, nil
 }

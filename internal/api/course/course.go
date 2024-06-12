@@ -2,7 +2,9 @@
 package course
 
 import (
+	"errors"
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/loopfz/gadgeto/tonic"
@@ -60,8 +62,18 @@ func GetCourses(c *gin.Context) (*CoursesOutput, error) {
 }
 
 func GetCourseByID(c *gin.Context, params *GetCourseByIDParams) (*CourseOutput, error) {
-	id := params.ID
-	log.Println("GetCourseByID called with ID:", id)
+	idStr := params.ID
+	log.Println("GetCourseByID called with ID:", idStr)
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Println("Invalid course ID:", idStr)
+		return nil, &gin.Error{
+			Err:  errors.New("invalid course_id"),
+			Type: gin.ErrorTypePublic,
+			Meta: gin.H{"error": "invalid course_id"},
+		}
+	}
 
 	var course course.Course
 	result := db.Preload("Classes.Images").First(&course, id)

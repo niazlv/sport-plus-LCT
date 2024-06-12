@@ -2,3 +2,6 @@ docker/storage/
 storage/
 **/*.env
 **/.obsidian/*
+uploads/*
+!uploads/.gitkeep
+**/.DS_Store
