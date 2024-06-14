@@ -1,4 +1,3 @@
-// internal/database/calendar/calendar.go
 package calendar
 
 import (
@@ -7,6 +6,7 @@ import (
 	"time"
 
 	"github.com/niazlv/sport-plus-LCT/internal/config"
+	"github.com/niazlv/sport-plus-LCT/internal/database/auth"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,6 +24,8 @@ type Schedule struct {
 	IsGlobal       bool      `json:"is_global"` // Глобальное или локальное событие
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+	Client         auth.User `json:"client"`
+	Coach          auth.User `json:"coach"`
 }
 
 var db *gorm.DB
@@ -68,7 +70,7 @@ func CreateSchedule(schedule *Schedule) (*Schedule, error) {
 
 func GetScheduleByID(id int) (*Schedule, error) {
 	var schedule Schedule
-	result := db.Where("id = ?", id).First(&schedule)
+	result := db.Preload("Client").Preload("Coach").Where("id = ?", id).First(&schedule)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -102,7 +104,7 @@ func DeleteSchedule(id int) error {
 
 func GetSchedulesByCoachID(coachID int) ([]Schedule, error) {
 	var schedules []Schedule
-	result := db.Where("coach_id = ? OR is_global = ?", coachID, true).Find(&schedules)
+	result := db.Preload("Client").Preload("Coach").Where("coach_id = ? OR is_global = ?", coachID, true).Find(&schedules)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -111,7 +113,7 @@ func GetSchedulesByCoachID(coachID int) ([]Schedule, error) {
 
 func GetSchedulesByClientID(clientID int) ([]Schedule, error) {
 	var schedules []Schedule
-	result := db.Where("client_id = ? OR is_global = ?", clientID, true).Find(&schedules)
+	result := db.Preload("Client").Preload("Coach").Where("client_id = ? OR is_global = ?", clientID, true).Find(&schedules)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -120,7 +122,7 @@ func GetSchedulesByClientID(clientID int) ([]Schedule, error) {
 
 func GetGlobalSchedules() ([]Schedule, error) {
 	var schedules []Schedule
-	result := db.Where("is_global = ?", true).Find(&schedules)
+	result := db.Preload("Client").Preload("Coach").Where("is_global = ?", true).Find(&schedules)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -129,7 +131,7 @@ func GetGlobalSchedules() ([]Schedule, error) {
 
 func GetLocalSchedulesByCoachID(coachID int) ([]Schedule, error) {
 	var schedules []Schedule
-	result := db.Where("coach_id = ? AND is_global = ?", coachID, false).Find(&schedules)
+	result := db.Preload("Client").Preload("Coach").Where("coach_id = ? AND is_global = ?", coachID, false).Find(&schedules)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -138,7 +140,7 @@ func GetLocalSchedulesByCoachID(coachID int) ([]Schedule, error) {
 
 func GetLocalSchedulesByClientID(clientID int) ([]Schedule, error) {
 	var schedules []Schedule
-	result := db.Where("client_id = ? AND is_global = ?", clientID, false).Find(&schedules)
+	result := db.Preload("Client").Preload("Coach").Where("client_id = ? AND is_global = ?", clientID, false).Find(&schedules)
 	if result.Error != nil {
 		return nil, result.Error
 	}

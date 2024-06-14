@@ -24,6 +24,7 @@ type User struct {
 	GymName          string `json:"gymName" body:"gymName"`
 	HealthConditions string `json:"healthConditions" body:"healthConditions"`
 	Role             int    `json:"role" body:"role"`
+	Name             string `json:"name" body:"name"`
 }
 
 var db *gorm.DB

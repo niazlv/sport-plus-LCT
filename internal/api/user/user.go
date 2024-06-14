@@ -87,6 +87,7 @@ func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, err
 		GymName:          in.GymName,
 		HealthConditions: in.HealthConditions,
 		Role:             in.Role,
+		Name:             in.Name,
 	}
 
 	// Обновляем пользователя в базе данных

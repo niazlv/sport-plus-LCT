@@ -53,6 +53,25 @@ func Setup(rg *fizz.RouterGroup) {
 	api.DELETE("/:schedule_id", []fizz.OperationOption{fizz.Summary("Delete schedule by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(DeleteSchedule, 204))
 }
 
+// client, coach, user
+
+type getSchedulesOutput struct {
+	Id             int           `gorm:"primaryKey" json:"id"`
+	CoachID        int           `json:"coach_id"`  // ID тренера
+	ClientID       int           `json:"client_id"` // ID клиента
+	Date           time.Time     `json:"date"`
+	StartTime      time.Time     `json:"start_time"`
+	EndTime        time.Time     `json:"end_time"`
+	Type           string        `json:"type"`
+	ReminderClient bool          `json:"reminder_client"`
+	ReminderCoach  bool          `json:"reminder_coach"`
+	IsGlobal       bool          `json:"is_global"` // Глобальное или локальное событие
+	CreatedAt      time.Time     `json:"created_at"`
+	UpdatedAt      time.Time     `json:"updated_at"`
+	Client         database.User `json:"client"`
+	Coach          database.User `json:"coach"`
+}
+
 func GetSchedules(c *gin.Context) (*[]calendar.Schedule, error) {
 	claims := c.MustGet("claims").(jwt.MapClaims)
 	userClaims, err := auth.ExtractClaims(claims)
@@ -79,6 +98,7 @@ func GetSchedules(c *gin.Context) (*[]calendar.Schedule, error) {
 	return &schedules, nil
 }
 
+// pgipool, qery builder
 type GetSchedulesByUserIDParams struct {
 	ID int `path:"user_id" binding:"required"`
 }

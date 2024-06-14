@@ -36,6 +36,7 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/gorilla/websocket v1.5.2
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/juju/errors v1.0.0
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
