@@ -9,8 +9,8 @@ CALENDAR_URL = f"{BASE_URL}/calendar"
 
 # Данные пользователей
 users = [
-    {"login": "coach_acc0", "password": "12345", "role": "coach"},
-    {"login": "client_calendar", "password": "client_calendar", "role": "client"}
+    {"login": "coach_acc0", "password": "12345", "role": "coach", "id":41},
+    {"login": "client_calendar", "password": "client_calendar", "role": "client", "id":40}
 ]
 
 # Функция для авторизации и получения токена
@@ -47,7 +47,7 @@ def generate_schedules():
                 start_time = now + timedelta(days=event["days"], hours=12)
                 end_time = start_time + timedelta(hours=1)
                 schedules.append({
-                    "client_id": 1 if user["role"] == "coach" else 1,
+                    "client_id": user["id"],
                     "date": start_time.isoformat(timespec='seconds') + 'Z',
                     "start_time": start_time.isoformat(timespec='seconds') + 'Z',
                     "end_time": end_time.isoformat(timespec='seconds') + 'Z',
@@ -62,7 +62,7 @@ def generate_schedules():
         start_time = now + timedelta(days=7, hours=12)
         end_time = start_time + timedelta(hours=1)
         schedules.append({
-            "client_id": 1,
+            "client_id": 41,
             "date": start_time.isoformat(timespec='seconds') + 'Z',
             "start_time": start_time.isoformat(timespec='seconds') + 'Z',
             "end_time": end_time.isoformat(timespec='seconds') + 'Z',

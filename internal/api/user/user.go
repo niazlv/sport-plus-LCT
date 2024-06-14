@@ -1,6 +1,11 @@
 package user
 
 import (
+	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/juju/errors"
@@ -25,6 +30,7 @@ func Setup(rg *fizz.RouterGroup) {
 	api.GET("", []fizz.OperationOption{fizz.Summary("Return Your User"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetUser, 200))
 	api.GET("/:id", []fizz.OperationOption{fizz.Summary("Return User by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetUserByID, 200))
 	api.PUT("/onboarding", []fizz.OperationOption{fizz.Summary("Update User data after onboarding"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(putOnboarding, 200))
+	api.POST("/upload/icon", []fizz.OperationOption{fizz.Summary("Upload user icon"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UploadUserIcon, 201))
 }
 
 type GetUserOutput struct {
@@ -88,6 +94,7 @@ func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, err
 		HealthConditions: in.HealthConditions,
 		Role:             in.Role,
 		Name:             in.Name,
+		Icon:             in.Icon,
 	}
 
 	// Обновляем пользователя в базе данных
@@ -107,4 +114,49 @@ func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, err
 	}
 
 	return &putOnboardingOutput{Status: "user updated successfully"}, nil
+}
+
+type UploadUserIconOutput struct {
+	Url string `json:"url"`
+}
+
+func UploadUserIcon(c *gin.Context) (*UploadUserIconOutput, error) {
+	claims := c.MustGet("claims").(jwt.MapClaims)
+
+	userClaims, err := auth.ExtractClaims(claims)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := c.FormFile("icon")
+	if err != nil {
+		return nil, err
+	}
+
+	uploadDir := "./uploads/icons"
+	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		return nil, err
+	}
+
+	filePath := filepath.Join(uploadDir, file.Filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		return nil, err
+	}
+
+	iconURL := fmt.Sprintf("http://%s/uploads/icons/%s", c.Request.Host, url.PathEscape(file.Filename))
+
+	// Обновляем иконку пользователя в базе данных
+	user, err := database.FindUserByID(userClaims.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Icon = iconURL
+	if err := database.PartialUpdateUser(user); err != nil {
+		return nil, err
+	}
+
+	return &UploadUserIconOutput{
+		Url: iconURL,
+	}, nil
 }

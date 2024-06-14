@@ -13,7 +13,7 @@ import (
 )
 
 func SetupClassImageRoutes(api *fizz.RouterGroup) {
-	imagesAPI := api.Group("/:class_id/images", "Images", "Images related endpoints")
+	imagesAPI := api.Group("/:class_id/images", "Images for class", "Images for class related endpoints")
 	imagesAPI.POST("", []fizz.OperationOption{fizz.Summary("Create a new image for class"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(CreateClassImage, 201))
 	imagesAPI.GET("/:image_id", []fizz.OperationOption{fizz.Summary("Get image by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetClassImageByID, 200))
 	imagesAPI.PUT("/:image_id", []fizz.OperationOption{fizz.Summary("Update image by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UpdateClassImage, 200))

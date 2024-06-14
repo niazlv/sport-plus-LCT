@@ -25,6 +25,7 @@ type User struct {
 	HealthConditions string `json:"healthConditions" body:"healthConditions"`
 	Role             int    `json:"role" body:"role"`
 	Name             string `json:"name" body:"name"`
+	Icon             string `json:"icon" body:"icon"`
 }
 
 var db *gorm.DB
@@ -153,6 +154,12 @@ func PartialUpdateUser(user *User) error {
 	}
 	if user.Role != 0 {
 		updates["role"] = user.Role
+	}
+	if user.Name != "" {
+		updates["name"] = user.Name
+	}
+	if user.Icon != "" {
+		updates["icon"] = user.Icon
 	}
 
 	result := db.Model(&User{}).Where("id = ?", user.Id).Updates(updates)
