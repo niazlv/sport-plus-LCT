@@ -47,7 +47,7 @@ def generate_schedules():
                 start_time = now + timedelta(days=event["days"], hours=12)
                 end_time = start_time + timedelta(hours=1)
                 schedules.append({
-                    "client_id": 0 if user["role"] == "coach" else 1,
+                    "client_id": 1 if user["role"] == "coach" else 1,
                     "date": start_time.isoformat(timespec='seconds') + 'Z',
                     "start_time": start_time.isoformat(timespec='seconds') + 'Z',
                     "end_time": end_time.isoformat(timespec='seconds') + 'Z',
@@ -62,7 +62,7 @@ def generate_schedules():
         start_time = now + timedelta(days=7, hours=12)
         end_time = start_time + timedelta(hours=1)
         schedules.append({
-            "client_id": 0,
+            "client_id": 1,
             "date": start_time.isoformat(timespec='seconds') + 'Z',
             "start_time": start_time.isoformat(timespec='seconds') + 'Z',
             "end_time": end_time.isoformat(timespec='seconds') + 'Z',
