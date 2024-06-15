@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/niazlv/sport-plus-LCT/internal/config"
-	"github.com/niazlv/sport-plus-LCT/internal/database/auth"
+	database_auth "github.com/niazlv/sport-plus-LCT/internal/database/auth"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -14,20 +14,20 @@ import (
 type AttachableType string
 
 type Attachment struct {
-  Id int `gorm:"primaryKey" json:"id"`
-  AttachableType AttachableType `json:"attachable_type"`
-  AttachableId int `json:"attachable_id"`
-  MessageId int `json:"message_id"`
-	CreatedAt time.Time `json:"created_at"`
+	Id             int            `gorm:"primaryKey" json:"id"`
+	AttachableType AttachableType `json:"attachable_type"`
+	AttachableId   int            `json:"attachable_id"`
+	MessageId      int            `json:"message_id"`
+	CreatedAt      time.Time      `json:"created_at"`
 }
 
 type Message struct {
-	Id        int       `gorm:"primaryKey" json:"id"`
-	ChatId    int       `json:"chat_id"`
-	UserId    int       `json:"user_id"`
-	Content   string    `json:"content"`
-  Attachments []*Attachment `json:"attachments" gorm:"foreignKey:MessageId"`
-	CreatedAt time.Time `json:"created_at"`
+	Id          int           `gorm:"primaryKey" json:"id"`
+	ChatId      int           `json:"chat_id"`
+	UserId      int           `json:"user_id"`
+	Content     string        `json:"content"`
+	Attachments []*Attachment `json:"attachments" gorm:"foreignKey:MessageId"`
+	CreatedAt   time.Time     `json:"created_at"`
 }
 
 var db *gorm.DB
@@ -54,7 +54,7 @@ func InitDB() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&auth.Chat{}, &Message{}, &Attachment{})
+	err = db.AutoMigrate(&database_auth.Chat{}, &Message{}, &Attachment{})
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func InitDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func CreateChat(chat *auth.Chat) (*auth.Chat, error) {
+func CreateChat(chat *database_auth.Chat) (*database_auth.Chat, error) {
 	result := db.Create(chat)
 	if result.Error != nil {
 		return nil, result.Error
@@ -71,21 +71,21 @@ func CreateChat(chat *auth.Chat) (*auth.Chat, error) {
 }
 
 func CanJoinChat(chatId int, userId int) bool {
-    var count int64
-    err := db.Model(&auth.Chat{}).
-        Joins("JOIN chat_users ON chat_users.chat_id = chats.id").
-        Where("chats.id = ? AND chat_users.user_id = ?", chatId, userId).
-        Count(&count).Error
+	var count int64
+	err := db.Model(&database_auth.Chat{}).
+		Joins("JOIN chat_users ON chat_users.chat_id = chats.id").
+		Where("chats.id = ? AND chat_users.user_id = ?", chatId, userId).
+		Count(&count).Error
 
-    if err != nil {
-        return false
-    }
+	if err != nil {
+		return false
+	}
 
-    return count == 0
+	return count == 0
 }
 
-func GetChatByID(id int) (*auth.Chat, error) {
-	var chat auth.Chat
+func GetChatByID(id int) (*database_auth.Chat, error) {
+	var chat database_auth.Chat
 	result := db.First(&chat, id)
 	if result.Error != nil {
 		return nil, result.Error
@@ -93,8 +93,8 @@ func GetChatByID(id int) (*auth.Chat, error) {
 	return &chat, nil
 }
 
-func GetChats() ([]auth.Chat, error) {
-	var chats []auth.Chat
+func GetChats() ([]database_auth.Chat, error) {
+	var chats []database_auth.Chat
 	result := db.Find(&chats)
 	if result.Error != nil {
 		return nil, result.Error
@@ -103,40 +103,40 @@ func GetChats() ([]auth.Chat, error) {
 }
 
 type CreateMessageDto struct {
-  Message Message
-  AttachableId *int
-  AttachableType *AttachableType
+	Message        Message
+	AttachableId   *int
+	AttachableType *AttachableType
 }
 
 func CreateMessage(dto *CreateMessageDto) (*Message, error) {
-    tx := db.Begin()
-    if tx.Error != nil {
-        return nil, tx.Error
-    }
+	tx := db.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
 
-    if err := tx.Create(&dto.Message).Error; err != nil {
-        tx.Rollback()
-        return nil, err
-    }
+	if err := tx.Create(&dto.Message).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
 
-    attachment := &Attachment{
-        AttachableType: *dto.AttachableType,
-        AttachableId:   *dto.AttachableId,
-        MessageId:      dto.Message.Id,
-    }
+	attachment := &Attachment{
+		AttachableType: *dto.AttachableType,
+		AttachableId:   *dto.AttachableId,
+		MessageId:      dto.Message.Id,
+	}
 
-    if err := tx.Create(attachment).Error; err != nil {
-        tx.Rollback()
-        return nil, err
-    }
+	if err := tx.Create(attachment).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
 
-    dto.Message.Attachments = []*Attachment{attachment}
+	dto.Message.Attachments = []*Attachment{attachment}
 
-    if err := tx.Commit().Error; err != nil {
-        return nil, err
-    }
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
 
-    return &dto.Message, nil
+	return &dto.Message, nil
 }
 
 func GetMessagesByChatID(chatID int) ([]Message, error) {

@@ -7,6 +7,7 @@ import (
 	"github.com/juju/errors"
 	"github.com/loopfz/gadgeto/tonic"
 	"github.com/niazlv/sport-plus-LCT/internal/api/auth"
+	database_auth "github.com/niazlv/sport-plus-LCT/internal/database/auth"
 	database "github.com/niazlv/sport-plus-LCT/internal/database/chat"
 	"github.com/wI2L/fizz"
 )
@@ -26,11 +27,11 @@ type createChatInput struct {
 }
 
 type createChatOutput struct {
-	Chat database.Chat `json:"chat"`
+	Chat database_auth.Chat `json:"chat"`
 }
 
 func createChat(c *gin.Context, in *createChatInput) (*createChatOutput, error) {
-	chat := &database.Chat{
+	chat := &database_auth.Chat{
 		Name:      in.Name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -45,7 +46,7 @@ func createChat(c *gin.Context, in *createChatInput) (*createChatOutput, error) 
 }
 
 type getChatsOutput struct {
-	Chats []database.Chat `json:"chats"`
+	Chats []database_auth.Chat `json:"chats"`
 }
 
 func getChats(c *gin.Context) (*getChatsOutput, error) {
@@ -61,7 +62,7 @@ type getChatByIDInput struct {
 }
 
 type getChatByIDOutput struct {
-	Chat database.Chat `json:"chat"`
+	Chat database_auth.Chat `json:"chat"`
 }
 
 func getChatByID(c *gin.Context, in *getChatByIDInput) (*getChatByIDOutput, error) {

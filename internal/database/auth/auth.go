@@ -57,14 +57,14 @@ type User struct {
 	Icon             string        `json:"icon" body:"icon"`
 	About            string        `json:"about"`
 	Achivements      string        `json:"achivements"`
-  Age              int           `json:"age"`
-  Chats            []*Chat  `json:"chats" gorm:"many2many:chat_users"`
+	Age              int           `json:"age"`
+	Chats            []*Chat       `json:"chats" gorm:"many2many:chat_users"`
 }
 
 type Chat struct {
 	Id        int       `gorm:"primaryKey" json:"id"`
 	Name      string    `json:"name"`
-  Users     []*User `gorm:"many2many:chat_users"`
+	Users     []*User   `gorm:"many2many:chat_users"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

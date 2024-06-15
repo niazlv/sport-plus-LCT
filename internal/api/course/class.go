@@ -20,7 +20,7 @@ func SetupClassRoutes(api *fizz.RouterGroup) {
 	classesAPI.PUT("/:class_id", []fizz.OperationOption{fizz.Summary("Update class by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UpdateClass, 200))
 	classesAPI.DELETE("/:class_id", []fizz.OperationOption{fizz.Summary("Delete class by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(DeleteClass, 204))
 
-	SetupClassImageRoutes(classesAPI)
+	SetupLessonRoutes(classesAPI)
 }
 
 type ClassOutput struct {
@@ -41,9 +41,6 @@ type CreateClassInput struct {
 	Title       string `json:"title" binding:"required"`
 	Description string `json:"description"`
 	Cover       string `json:"cover"`
-	Content     string `json:"content"`
-	Video       string `json:"video"`
-	Tips        string `json:"tips"`
 }
 
 type UpdateClassInput struct {
@@ -52,9 +49,6 @@ type UpdateClassInput struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Cover       string `json:"cover"`
-	Content     string `json:"content"`
-	Video       string `json:"video"`
-	Tips        string `json:"tips"`
 }
 
 type GetClassesParams struct {
@@ -66,7 +60,7 @@ func GetClasses(c *gin.Context, params *GetClassesParams) (*ClassesOutput, error
 	log.Println("GetClasses called with course_id:", courseID)
 
 	var classes []course.Class
-	result := db.Preload("Images").Where("course_id = ?", courseID).Find(&classes)
+	result := db.Where("course_id = ?", courseID).Find(&classes)
 	if result.Error != nil {
 		log.Println("Error retrieving classes:", result.Error)
 		return nil, result.Error
@@ -83,7 +77,7 @@ func GetClassByID(c *gin.Context, params *GetClassByIDParams) (*ClassOutput, err
 	log.Println("GetClassByID called with class_id:", classID)
 
 	var class course.Class
-	result := db.Preload("Images").First(&class, classID)
+	result := db.First(&class, classID)
 	if result.Error != nil {
 		log.Println("Error retrieving class:", result.Error)
 		if result.Error == gorm.ErrRecordNotFound {
@@ -121,9 +115,6 @@ func CreateClass(c *gin.Context, in *CreateClassInput) (*ClassOutput, error) {
 		Title:       in.Title,
 		Description: in.Description,
 		Cover:       in.Cover,
-		Content:     in.Content,
-		Video:       in.Video,
-		Tips:        in.Tips,
 	}
 
 	result := db.Create(&newClass)
@@ -164,15 +155,6 @@ func UpdateClass(c *gin.Context, in *UpdateClassInput) (*ClassOutput, error) {
 	}
 	if in.Cover != "" {
 		class.Cover = in.Cover
-	}
-	if in.Content != "" {
-		class.Content = in.Content
-	}
-	if in.Video != "" {
-		class.Video = in.Video
-	}
-	if in.Tips != "" {
-		class.Tips = in.Tips
 	}
 
 	result = db.Save(&class)

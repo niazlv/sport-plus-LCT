@@ -93,6 +93,16 @@ This project is currently in the development stage and is intended for the LCT h
   - [ ] docker compose
 - [ ] Дописать LICENCE
 - [ ] Добавить защит от дурака, при обращении к БД(в частности для auth, user, getUserByID)
+- [x] chat
+	- [x] rewrite socket.io
+	- [x] delete endpont send messages
+	- [x] broadcast message from user to all (chatid, messageid, message)
+	- [x] one socket, send chatid when user connect.
+	- [x] attachments "string"
+- [x] webrtc
+- [ ] course->class->lessions
+- [ ] решить циклическую зависимость auth<->chat и вынести chat из auth
+- [ ] TODO: createchatfromcourse. Чат для курса
 
 ## Links
 

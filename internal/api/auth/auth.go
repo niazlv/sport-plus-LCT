@@ -59,6 +59,35 @@ func ExtractClaims(claims jwt.MapClaims) (*UserClaims, error) {
 	return userClaims, nil
 }
 
+// ExtractClaims извлекает claims из JWT токена
+func ExtractClaimsFromJWT(tokenStr string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+	if err != nil || !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("cannot extract claims")
+	}
+
+	return claims, nil
+}
+
+// IsValidToken проверяет валидность токена
+func IsValidToken(tokenStr string) (bool, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+	if err != nil || !token.Valid {
+		return false, errors.New("invalid token")
+	}
+
+	return true, nil
+}
+
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err

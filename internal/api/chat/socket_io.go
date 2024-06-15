@@ -4,17 +4,20 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	socketio "github.com/googollee/go-socket.io"
+	"github.com/niazlv/sport-plus-LCT/internal/api/auth"
+	database_auth "github.com/niazlv/sport-plus-LCT/internal/database/auth"
 	database "github.com/niazlv/sport-plus-LCT/internal/database/chat"
 )
 
 var Server *socketio.Server
 
 func GetRoomName(chatId int) string {
-  return fmt.Sprintf(`room-%s`, strconv.Itoa(chatId))
+	return fmt.Sprintf(`room-%s`, strconv.Itoa(chatId))
 }
 
 func InitSocketIO() {
@@ -26,11 +29,46 @@ func InitSocketIO() {
 	})
 
 	Server.OnEvent("/", "join_chat", func(s socketio.Conn, chatID int) {
-    // TODO savva
-    canJoin := database.CanJoinChat(chatID, 0);
-    if (!canJoin) {
-      return
-    }
+		// Извлекаем токен из заголовка
+		tokenStr := s.RemoteHeader().Get("Authorization")
+		if tokenStr == "" {
+			s.Close()
+			return
+		}
+		// Удаляем префикс "Bearer "
+		tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
+
+		// Проверяем валидность токена
+		valid, err := auth.IsValidToken(tokenStr)
+		if !valid || err != nil {
+			s.Close()
+			return
+		}
+
+		// Извлекаем claims из токена
+		claims, err := auth.ExtractClaimsFromJWT(tokenStr)
+		if err != nil {
+			s.Close()
+			return
+		}
+
+		userID, ok := claims["id"].(float64)
+		if !ok {
+			s.Close()
+			return
+		}
+
+		// Находим пользователя по ID
+		User, err := database_auth.FindUserByID(int(userID))
+		if err != nil {
+			s.Close()
+			return
+		}
+
+		canJoin := database.CanJoinChat(chatID, User.Id)
+		if !canJoin {
+			return
+		}
 		s.Join(GetRoomName(chatID))
 
 		log.Printf("user %s joined chat %d", s.ID(), chatID)

@@ -13,8 +13,8 @@ import (
 )
 
 func SetupClassImageRoutes(api *fizz.RouterGroup) {
-	imagesAPI := api.Group("/:class_id/images", "Images for class", "Images for class related endpoints")
-	imagesAPI.POST("", []fizz.OperationOption{fizz.Summary("Create a new image for class"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(CreateClassImage, 201))
+	imagesAPI := api.Group("/lessons/:lesson_id/images", "Images for lesson", "Images for lesson related endpoints")
+	imagesAPI.POST("", []fizz.OperationOption{fizz.Summary("Create a new image for lesson"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(CreateClassImage, 201))
 	imagesAPI.GET("/:image_id", []fizz.OperationOption{fizz.Summary("Get image by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetClassImageByID, 200))
 	imagesAPI.PUT("/:image_id", []fizz.OperationOption{fizz.Summary("Update image by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UpdateClassImage, 200))
 	imagesAPI.DELETE("/:image_id", []fizz.OperationOption{fizz.Summary("Delete image by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(DeleteClassImage, 204))
@@ -31,18 +31,21 @@ type ClassImagesOutput struct {
 type GetClassImageByIDParams struct {
 	CourseID string `path:"course_id" binding:"required"`
 	ClassID  string `path:"class_id" binding:"required"`
+	LessonID string `path:"lesson_id" binding:"required"`
 	ID       string `path:"image_id" binding:"required"`
 }
 
 type CreateClassImageInput struct {
 	CourseID string `path:"course_id" validate:"required"`
 	ClassID  string `path:"class_id" validate:"required"`
+	LessonID string `path:"lesson_id" validate:"required"`
 	Image    string `json:"image" binding:"required"`
 }
 
 type UpdateClassImageInput struct {
 	CourseID string `path:"course_id" binding:"required"`
 	ClassID  string `path:"class_id" binding:"required"`
+	LessonID string `path:"lesson_id" binding:"required"`
 	ID       string `path:"image_id" binding:"required"`
 	Image    string `json:"image"`
 }
@@ -50,25 +53,26 @@ type UpdateClassImageInput struct {
 type GetClassImagesParams struct {
 	CourseID string `path:"course_id" binding:"required"`
 	ClassID  string `path:"class_id" binding:"required"`
+	LessonID string `path:"lesson_id" binding:"required"`
 }
 
 func CreateClassImage(c *gin.Context, in *CreateClassImageInput) (*ClassImageOutput, error) {
-	classIDStr := in.ClassID
-	log.Printf("CreateClassImage called with class_id: %s and input: %+v\n", classIDStr, in)
+	lessonIDStr := in.LessonID
+	log.Printf("CreateClassImage called with lesson_id: %s and input: %+v\n", lessonIDStr, in)
 
-	classID, err := strconv.Atoi(classIDStr)
+	lessonID, err := strconv.Atoi(lessonIDStr)
 	if err != nil {
-		log.Println("Error converting class_id to int:", err)
+		log.Println("Error converting lesson_id to int:", err)
 		return nil, &gin.Error{
 			Err:  err,
 			Type: gin.ErrorTypePublic,
-			Meta: gin.H{"error": "invalid class_id"},
+			Meta: gin.H{"error": "invalid lesson_id"},
 		}
 	}
 
 	newClassImage := course.ClassImage{
-		ClassID: classID,
-		Image:   in.Image,
+		LessonID: lessonID,
+		Image:    in.Image,
 	}
 
 	result := db.Create(&newClassImage)

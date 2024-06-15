@@ -30,24 +30,36 @@ type Course struct {
 
 // Class модель занятия
 type Class struct {
-	Id          int          `gorm:"primaryKey" json:"id"`
-	CourseID    int          `json:"course_id"`
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	Cover       string       `json:"cover"`
-	Content     string       `json:"content"`
-	Video       string       `json:"video"`
-	Tips        string       `json:"tips"`
-	Images      []ClassImage `json:"images" gorm:"foreignKey:ClassID"`
-	CreatedAt   time.Time    `json:"created_at"`
-	UpdatedAt   time.Time    `json:"updated_at"`
+	Id          int       `gorm:"primaryKey" json:"id"`
+	CourseID    int       `json:"course_id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Cover       string    `json:"cover"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Lessons     []Lesson  `json:"lessons" gorm:"foreignKey:ClassID"`
+}
+
+// Lesson модель урока
+type Lesson struct {
+	Id              int          `gorm:"primaryKey" json:"id"`
+	CourseID        int          `json:"course_id"`
+	ClassID         int          `json:"class_id"`
+	Title           string       `json:"title"`
+	Description     string       `json:"description"`
+	Video           string       `json:"video"`
+	Tips            string       `json:"tips"`
+	Images          []ClassImage `json:"images" gorm:"foreignKey:LessonID"`
+	DurationSeconds int          `json:"duration_seconds"`
+	CreatedAt       time.Time    `json:"created_at"`
+	UpdatedAt       time.Time    `json:"updated_at"`
 }
 
 // ClassImage модель изображения занятия
 type ClassImage struct {
-	Id      int    `gorm:"primaryKey" json:"id"`
-	ClassID int    `json:"class_id"`
-	Image   string `json:"image"`
+	Id       int    `gorm:"primaryKey" json:"id"`
+	LessonID int    `json:"lesson_id"`
+	Image    string `json:"image"`
 }
 
 var db *gorm.DB
@@ -74,12 +86,56 @@ func InitDB() (*gorm.DB, error) {
 		return nil, errors.New("failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&Course{}, &Class{}, &ClassImage{})
+	err = db.AutoMigrate(&Course{}, &Class{}, &Lesson{}, &ClassImage{})
 	if err != nil {
 		return nil, err
 	}
 
 	return db, nil
+}
+
+// CRUD функции для модели Lesson
+
+func CreateLesson(lesson *Lesson) (*Lesson, error) {
+	result := db.Create(lesson)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return lesson, nil
+}
+
+func GetLessonByID(id int) (*Lesson, error) {
+	var lesson Lesson
+	result := db.Preload("Images").Where("id = ?", id).First(&lesson)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &lesson, nil
+}
+
+func UpdateLesson(lesson *Lesson) error {
+	result := db.Model(&Lesson{}).Where("id = ?", lesson.Id).Updates(lesson)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func DeleteLesson(id int) error {
+	result := db.Delete(&Lesson{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 // CRUD функции для модели Course
