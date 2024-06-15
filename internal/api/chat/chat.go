@@ -1,11 +1,9 @@
-// internal/api/chat/chat.go
 package chat
 
 import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
 	"github.com/juju/errors"
 	"github.com/loopfz/gadgeto/tonic"
 	"github.com/niazlv/sport-plus-LCT/internal/api/auth"
@@ -19,7 +17,7 @@ func Setup(rg *fizz.RouterGroup) {
 	api.POST("", []fizz.OperationOption{fizz.Summary("Create a new chat"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(createChat, 200))
 	api.GET("", []fizz.OperationOption{fizz.Summary("Get all chats"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(getChats, 200))
 	api.GET("/:id", []fizz.OperationOption{fizz.Summary("Get a chat by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(getChatByID, 200))
-	api.POST("/:id/message", []fizz.OperationOption{fizz.Summary("Send a message in a chat"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(sendMessage, 200))
+	// api.POST("/:id/message", []fizz.OperationOption{fizz.Summary("Send a message in a chat"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(sendMessage, 200))
 	api.GET("/:id/messages", []fizz.OperationOption{fizz.Summary("Get all messages in a chat"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(getMessages, 200))
 }
 
@@ -72,37 +70,6 @@ func getChatByID(c *gin.Context, in *getChatByIDInput) (*getChatByIDOutput, erro
 		return nil, errors.New(err.Error())
 	}
 	return &getChatByIDOutput{Chat: *chat}, nil
-}
-
-type sendMessageInput struct {
-	Content string `json:"content" validate:"required"`
-	ChatID  int    `path:"id" validate:"required"`
-}
-
-type sendMessageOutput struct {
-	Message database.Message `json:"message"`
-}
-
-func sendMessage(c *gin.Context, in *sendMessageInput) (*sendMessageOutput, error) {
-	claims := c.MustGet("claims").(jwt.MapClaims)
-	userClaims, err := auth.ExtractClaims(claims)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	message := &database.Message{
-		ChatId:    in.ChatID,
-		UserId:    userClaims.ID,
-		Content:   in.Content,
-		CreatedAt: time.Now(),
-	}
-
-	createdMessage, err := database.CreateMessage(message)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	return &sendMessageOutput{Message: *createdMessage}, nil
 }
 
 type getMessagesOutput struct {

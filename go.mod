@@ -11,7 +11,8 @@ require (
 )
 
 require (
-	github.com/gofrs/uuid v3.2.0+incompatible // indirect
+	github.com/gofrs/uuid v4.0.0+incompatible // indirect
+	github.com/gomodule/redigo v1.8.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
@@ -36,6 +37,7 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/googollee/go-socket.io v1.7.0
 	github.com/gorilla/websocket v1.5.2
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/juju/errors v1.0.0
