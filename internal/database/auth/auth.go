@@ -10,11 +10,20 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	TypeHeight = "height"
+	TypeWeight = "weight"
+	TypeWater  = "water"
+)
+
+var ValidTypesMeasurement = []string{TypeHeight, TypeWeight, TypeWater}
+
 type Measurement struct {
 	ID     int    `gorm:"primaryKey" json:"id"`
 	UserID int    `json:"userId"`
 	Date   string `json:"date" body:"date"`
 	Value  string `json:"value" body:"value"`
+	Type   string `json:"type" body:"type"`
 }
 
 type Train struct {
@@ -85,7 +94,12 @@ func InitDB() (*gorm.DB, error) {
 
 func FindUserByLogin(login string) (*User, error) {
 	var user User
-	result := db.Preload("Height").Preload("Weight").Preload("Water").Preload("Trains").Where("login = ?", login).First(&user)
+	result := db.Preload("Height", "type = ?", "height").
+		Preload("Weight", "type = ?", "weight").
+		Preload("Water", "type = ?", "water").
+		Preload("Trains.Trainer").
+		Preload("Trains.Client").
+		Where("login = ?", login).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -105,9 +119,9 @@ func CreateUser(user *User) (*User, error) {
 
 func FindUserByID(id int) (*User, error) {
 	var user User
-	result := db.Preload("Height").
-		Preload("Weight").
-		Preload("Water").
+	result := db.Preload("Height", "type = ?", "height").
+		Preload("Weight", "type = ?", "weight").
+		Preload("Water", "type = ?", "water").
 		Preload("Trains.Trainer").
 		Preload("Trains.Client").
 		Where("id = ?", id).First(&user)
@@ -151,15 +165,38 @@ func UpdateUser(user *User) error {
 }
 
 func updateMeasurements(user *User) error {
-	db.Where("user_id = ?", user.Id).Delete(&Measurement{})
+	if err := updateHeight(user); err != nil {
+		return err
+	}
+	if err := updateWeight(user); err != nil {
+		return err
+	}
+	if err := updateWater(user); err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateHeight(user *User) error {
+	db.Where("user_id = ? AND type = ?", user.Id, "height").Delete(&Measurement{})
 	for _, measurement := range user.Height {
 		measurement.UserID = user.Id
 		db.Create(&measurement)
 	}
+	return nil
+}
+
+func updateWeight(user *User) error {
+	db.Where("user_id = ? AND type = ?", user.Id, "weight").Delete(&Measurement{})
 	for _, measurement := range user.Weight {
 		measurement.UserID = user.Id
 		db.Create(&measurement)
 	}
+	return nil
+}
+
+func updateWater(user *User) error {
+	db.Where("user_id = ? AND type = ?", user.Id, "water").Delete(&Measurement{})
 	for _, measurement := range user.Water {
 		measurement.UserID = user.Id
 		db.Create(&measurement)

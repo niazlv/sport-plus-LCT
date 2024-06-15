@@ -20,7 +20,7 @@ func InitSocketIO() {
 	})
 
 	Server.OnEvent("/", "join_chat", func(s socketio.Conn, chatID int) {
-		s.Join(string(chatID))
+		s.Join(string(rune(chatID)))
 		log.Printf("user %s joined chat %d", s.ID(), chatID)
 	})
 
@@ -33,7 +33,7 @@ func InitSocketIO() {
 		}
 
 		// Broadcast the message to all users in the chat
-		Server.BroadcastToRoom("/", string(msg.ChatId), "message", createdMessage)
+		Server.BroadcastToRoom("/", string(rune(msg.ChatId)), "message", createdMessage)
 	})
 
 	Server.OnError("/", func(s socketio.Conn, e error) {
