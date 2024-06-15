@@ -32,6 +32,7 @@ func InitSocketIO() {
       return
     }
 		s.Join(GetRoomName(chatID))
+
 		log.Printf("user %s joined chat %d", s.ID(), chatID)
 	})
 

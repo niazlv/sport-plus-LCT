@@ -30,7 +30,6 @@ type Message struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-
 var db *gorm.DB
 
 func InitDB() (*gorm.DB, error) {

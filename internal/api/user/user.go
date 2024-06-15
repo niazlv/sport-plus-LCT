@@ -105,6 +105,7 @@ func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, err
 		Icon:             in.Icon,
 		About:            in.About,
 		Achivements:      in.Achivements,
+		Age:              in.Age,
 	}
 
 	// Обновляем пользователя в базе данных
@@ -175,6 +176,16 @@ type AddMeasurementInput struct {
 	// UserID int    `json:"userId" binding:"required"`
 	Date  string `json:"date" binding:"required"`
 	Value string `json:"value" binding:"required"`
+	Type  string `json:"type" binding:"required"`
+}
+
+func (input *AddMeasurementInput) Validate() error {
+	for _, validType := range database.ValidTypesMeasurement {
+		if input.Type == validType {
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid type: %s", input.Type)
 }
 
 type AddMeasurementOutput struct {
@@ -183,6 +194,11 @@ type AddMeasurementOutput struct {
 
 func AddMeasurement(c *gin.Context, in *AddMeasurementInput) (*AddMeasurementOutput, error) {
 	claims := c.MustGet("claims").(jwt.MapClaims)
+
+	// Validate input
+	if err := in.Validate(); err != nil {
+		return nil, err
+	}
 
 	userClaims, err := auth.ExtractClaims(claims)
 	if err != nil {
@@ -198,6 +214,7 @@ func AddMeasurement(c *gin.Context, in *AddMeasurementInput) (*AddMeasurementOut
 		UserID: User.Id,
 		Date:   in.Date,
 		Value:  in.Value,
+		Type:   in.Type,
 	}
 	createdMeasurement, err := database.AddMeasurement(measurement)
 	if err != nil {
