@@ -10,22 +10,44 @@ import (
 	"gorm.io/gorm"
 )
 
+type Measurement struct {
+	ID     int    `gorm:"primaryKey" json:"id"`
+	UserID int    `json:"userId"`
+	Date   string `json:"date" body:"date"`
+	Value  string `json:"value" body:"value"`
+}
+
+type Train struct {
+	ID        int    `gorm:"primaryKey" json:"id"`
+	UserID    int    `json:"userId"`
+	Date      string `json:"date" body:"date"`
+	TrainerID int    `json:"trainerId" body:"trainerId"`
+	ClientID  int    `json:"clientId" body:"clientId"`
+	Duration  string `json:"duration" body:"duration"`
+	Trainer   User   `json:"trainer,omitempty" gorm:"foreignKey:TrainerID"`
+	Client    User   `json:"client,omitempty" gorm:"foreignKey:ClientID"`
+}
+
 type User struct {
-	Id               int    `gorm:"primaryKey" json:"id" body:"id"`
-	Login            string `gorm:"unique" json:"login" body:"login"`
-	Password         string `json:"password" body:"password"`
-	Gender           string `json:"gender" body:"gender"`
-	Height           int    `json:"height" body:"height"`
-	Weight           int    `json:"weight" body:"weight"`
-	Goals            string `json:"goals" body:"goals"`
-	Experience       string `json:"experience" body:"experience"`
-	GymMember        bool   `json:"gymMember" body:"gymMember"`
-	Beginner         bool   `json:"beginner" body:"beginner"`
-	GymName          string `json:"gymName" body:"gymName"`
-	HealthConditions string `json:"healthConditions" body:"healthConditions"`
-	Role             int    `json:"role" body:"role"`
-	Name             string `json:"name" body:"name"`
-	Icon             string `json:"icon" body:"icon"`
+	Id               int           `gorm:"primaryKey" json:"id" body:"id"`
+	Login            string        `gorm:"unique" json:"login" body:"login"`
+	Password         string        `json:"password" body:"password"`
+	Gender           string        `json:"gender" body:"gender"`
+	Height           []Measurement `json:"height" body:"height" gorm:"foreignKey:UserID"`
+	Weight           []Measurement `json:"weight" body:"weight" gorm:"foreignKey:UserID"`
+	Water            []Measurement `json:"water" body:"water" gorm:"foreignKey:UserID"`
+	Trains           []Train       `json:"trains" body:"trains" gorm:"foreignKey:UserID"`
+	Goals            string        `json:"goals" body:"goals"`
+	Experience       string        `json:"experience" body:"experience"`
+	GymMember        bool          `json:"gymMember" body:"gymMember"`
+	Beginner         bool          `json:"beginner" body:"beginner"`
+	GymName          string        `json:"gymName" body:"gymName"`
+	HealthConditions string        `json:"healthConditions" body:"healthConditions"`
+	Role             int           `json:"role" body:"role"`
+	Name             string        `json:"name" body:"name"`
+	Icon             string        `json:"icon" body:"icon"`
+	About            string        `json:"about"`
+	Achivements      string        `json:"achivements"`
 }
 
 var db *gorm.DB
@@ -42,7 +64,6 @@ func InitDB() (*gorm.DB, error) {
 	for i := 0; i < 5; i++ {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
-			// Если произошла ошибка при подключении к базе данных, ждем некоторое время перед повторной попыткой
 			time.Sleep(5 * time.Second)
 		} else {
 			break
@@ -53,7 +74,7 @@ func InitDB() (*gorm.DB, error) {
 		return nil, errors.New("failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&User{})
+	err = db.AutoMigrate(&User{}, &Measurement{}, &Train{})
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +84,7 @@ func InitDB() (*gorm.DB, error) {
 
 func FindUserByLogin(login string) (*User, error) {
 	var user User
-	result := db.Where("login = ?", login).First(&user)
+	result := db.Preload("Height").Preload("Weight").Preload("Water").Preload("Trains").Where("login = ?", login).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -83,7 +104,12 @@ func CreateUser(user *User) (*User, error) {
 
 func FindUserByID(id int) (*User, error) {
 	var user User
-	result := db.Where("id = ?", id).First(&user)
+	result := db.Preload("Height").
+		Preload("Weight").
+		Preload("Water").
+		Preload("Trains.Trainer").
+		Preload("Trains.Client").
+		Where("id = ?", id).First(&user)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -112,10 +138,43 @@ func UpdateUser(user *User) error {
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
+
+	if err := updateMeasurements(user); err != nil {
+		return err
+	}
+	if err := updateTrains(user); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// PartialUpdateUser updates the user record with the provided data, ignoring zero-value fields
+func updateMeasurements(user *User) error {
+	db.Where("user_id = ?", user.Id).Delete(&Measurement{})
+	for _, measurement := range user.Height {
+		measurement.UserID = user.Id
+		db.Create(&measurement)
+	}
+	for _, measurement := range user.Weight {
+		measurement.UserID = user.Id
+		db.Create(&measurement)
+	}
+	for _, measurement := range user.Water {
+		measurement.UserID = user.Id
+		db.Create(&measurement)
+	}
+	return nil
+}
+
+func updateTrains(user *User) error {
+	db.Where("user_id = ?", user.Id).Delete(&Train{})
+	for _, train := range user.Trains {
+		train.UserID = user.Id
+		db.Create(&train)
+	}
+	return nil
+}
+
 func PartialUpdateUser(user *User) error {
 	updates := make(map[string]interface{})
 
@@ -127,12 +186,6 @@ func PartialUpdateUser(user *User) error {
 	}
 	if user.Gender != "" {
 		updates["gender"] = user.Gender
-	}
-	if user.Height != 0 {
-		updates["height"] = user.Height
-	}
-	if user.Weight != 0 {
-		updates["weight"] = user.Weight
 	}
 	if user.Goals != "" {
 		updates["goals"] = user.Goals
@@ -161,6 +214,12 @@ func PartialUpdateUser(user *User) error {
 	if user.Icon != "" {
 		updates["icon"] = user.Icon
 	}
+	if user.About != "" {
+		updates["about"] = user.About
+	}
+	if user.Achivements != "" {
+		updates["achivements"] = user.Achivements
+	}
 
 	result := db.Model(&User{}).Where("id = ?", user.Id).Updates(updates)
 	if result.Error != nil {
@@ -168,6 +227,66 @@ func PartialUpdateUser(user *User) error {
 	}
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
+	}
+
+	if err := updateMeasurements(user); err != nil {
+		return err
+	}
+	if err := updateTrains(user); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AddMeasurement(measurement *Measurement) (*Measurement, error) {
+	result := db.Create(measurement)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return measurement, nil
+}
+
+func UpdateMeasurement(measurement *Measurement) (*Measurement, error) {
+	result := db.Save(measurement)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return measurement, nil
+}
+
+func DeleteMeasurement(id int) error {
+	result := db.Delete(&Measurement{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func AddTrain(train *Train) (*Train, error) {
+	result := db.Create(train)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	// Подгружаем тренера и клиента после создания
+	db.Preload("Trainer").Preload("Client").First(train, train.ID)
+	return train, nil
+}
+
+func UpdateTrain(train *Train) (*Train, error) {
+	result := db.Save(train)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	// Подгружаем тренера и клиента после обновления
+	db.Preload("Trainer").Preload("Client").First(train, train.ID)
+	return train, nil
+}
+
+func DeleteTrain(id int) error {
+	result := db.Delete(&Train{}, id)
+	if result.Error != nil {
+		return result.Error
 	}
 	return nil
 }

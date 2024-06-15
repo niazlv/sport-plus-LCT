@@ -31,6 +31,14 @@ func Setup(rg *fizz.RouterGroup) {
 	api.GET("/:id", []fizz.OperationOption{fizz.Summary("Return User by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetUserByID, 200))
 	api.PUT("/onboarding", []fizz.OperationOption{fizz.Summary("Update User data after onboarding"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(putOnboarding, 200))
 	api.POST("/upload/icon", []fizz.OperationOption{fizz.Summary("Upload user icon"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UploadUserIcon, 201))
+
+	api.POST("/measurements", []fizz.OperationOption{fizz.Summary("Add a new measurement"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(AddMeasurement, 201))
+	api.PUT("/measurements/:id", []fizz.OperationOption{fizz.Summary("Update a measurement"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UpdateMeasurement, 200))
+	api.DELETE("/measurements/:id", []fizz.OperationOption{fizz.Summary("Delete a measurement"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(DeleteMeasurement, 204))
+
+	api.POST("/trains", []fizz.OperationOption{fizz.Summary("Add a new train"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(AddTrain, 201))
+	api.PUT("/trains/:id", []fizz.OperationOption{fizz.Summary("Update a train"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UpdateTrain, 200))
+	api.DELETE("/trains/:id", []fizz.OperationOption{fizz.Summary("Delete a train"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(DeleteTrain, 204))
 }
 
 type GetUserOutput struct {
@@ -95,6 +103,8 @@ func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, err
 		Role:             in.Role,
 		Name:             in.Name,
 		Icon:             in.Icon,
+		About:            in.About,
+		Achivements:      in.Achivements,
 	}
 
 	// Обновляем пользователя в базе данных
@@ -158,5 +168,199 @@ func UploadUserIcon(c *gin.Context) (*UploadUserIconOutput, error) {
 
 	return &UploadUserIconOutput{
 		Url: iconURL,
+	}, nil
+}
+
+type AddMeasurementInput struct {
+	// UserID int    `json:"userId" binding:"required"`
+	Date  string `json:"date" binding:"required"`
+	Value string `json:"value" binding:"required"`
+}
+
+type AddMeasurementOutput struct {
+	Measurement database.Measurement `json:"measurement"`
+}
+
+func AddMeasurement(c *gin.Context, in *AddMeasurementInput) (*AddMeasurementOutput, error) {
+	claims := c.MustGet("claims").(jwt.MapClaims)
+
+	userClaims, err := auth.ExtractClaims(claims)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	User, err := database.FindUserByID(userClaims.ID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	measurement := &database.Measurement{
+		UserID: User.Id,
+		Date:   in.Date,
+		Value:  in.Value,
+	}
+	createdMeasurement, err := database.AddMeasurement(measurement)
+	if err != nil {
+		return nil, err
+	}
+	return &AddMeasurementOutput{
+		Measurement: *createdMeasurement,
+	}, nil
+}
+
+type UpdateMeasurementInput struct {
+	ID int `json:"id" path:"id" binding:"required"`
+	// UserID int    `json:"userId" binding:"required"`
+	Date  string `json:"date" binding:"required"`
+	Value string `json:"value" binding:"required"`
+}
+
+type UpdateMeasurementOutput struct {
+	Measurement database.Measurement `json:"measurement"`
+}
+
+func UpdateMeasurement(c *gin.Context, in *UpdateMeasurementInput) (*UpdateMeasurementOutput, error) {
+	claims := c.MustGet("claims").(jwt.MapClaims)
+
+	userClaims, err := auth.ExtractClaims(claims)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	User, err := database.FindUserByID(userClaims.ID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	measurement := &database.Measurement{
+		ID:     in.ID,
+		UserID: User.Id,
+		Date:   in.Date,
+		Value:  in.Value,
+	}
+	updatedMeasurement, err := database.UpdateMeasurement(measurement)
+	if err != nil {
+		return nil, err
+	}
+	return &UpdateMeasurementOutput{
+		Measurement: *updatedMeasurement,
+	}, nil
+}
+
+type DeleteMeasurementInput struct {
+	ID int `json:"id" path:"id" binding:"required"`
+}
+
+type DeleteMeasurementOutput struct {
+	Status string `json:"status"`
+}
+
+func DeleteMeasurement(c *gin.Context, in *DeleteMeasurementInput) (*DeleteMeasurementOutput, error) {
+	if err := database.DeleteMeasurement(in.ID); err != nil {
+		return nil, err
+	}
+	return &DeleteMeasurementOutput{
+		Status: "measurement deleted successfully",
+	}, nil
+}
+
+type AddTrainInput struct {
+	// UserID    int    `json:"userId" binding:"required"`
+	Date      string `json:"date" binding:"required"`
+	TrainerID int    `json:"trainerId" binding:"required"`
+	ClientID  int    `json:"clientId" binding:"required"`
+	Duration  string `json:"duration" binding:"required"`
+}
+
+type AddTrainOutput struct {
+	Train database.Train `json:"train"`
+}
+
+func AddTrain(c *gin.Context, in *AddTrainInput) (*AddTrainOutput, error) {
+	claims := c.MustGet("claims").(jwt.MapClaims)
+
+	userClaims, err := auth.ExtractClaims(claims)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	User, err := database.FindUserByID(userClaims.ID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	train := &database.Train{
+		UserID:    User.Id,
+		Date:      in.Date,
+		TrainerID: in.TrainerID,
+		ClientID:  in.ClientID,
+		Duration:  in.Duration,
+	}
+	createdTrain, err := database.AddTrain(train)
+	if err != nil {
+		return nil, err
+	}
+	return &AddTrainOutput{
+		Train: *createdTrain,
+	}, nil
+}
+
+type UpdateTrainInput struct {
+	ID int `json:"id" path:"id" binding:"required"`
+	// UserID    int    `json:"userId" binding:"required"`
+	Date      string `json:"date" binding:"required"`
+	TrainerID int    `json:"trainerId" binding:"required"`
+	ClientID  int    `json:"clientId" binding:"required"`
+	Duration  string `json:"duration" binding:"required"`
+}
+
+type UpdateTrainOutput struct {
+	Train database.Train `json:"train"`
+}
+
+func UpdateTrain(c *gin.Context, in *UpdateTrainInput) (*UpdateTrainOutput, error) {
+	claims := c.MustGet("claims").(jwt.MapClaims)
+
+	userClaims, err := auth.ExtractClaims(claims)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	User, err := database.FindUserByID(userClaims.ID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	train := &database.Train{
+		ID:        in.ID,
+		UserID:    User.Id,
+		Date:      in.Date,
+		TrainerID: in.TrainerID,
+		ClientID:  in.ClientID,
+		Duration:  in.Duration,
+	}
+	updatedTrain, err := database.UpdateTrain(train)
+	if err != nil {
+		return nil, err
+	}
+	return &UpdateTrainOutput{
+		Train: *updatedTrain,
+	}, nil
+}
+
+type DeleteTrainInput struct {
+	ID int `json:"id" path:"id" binding:"required"`
+}
+
+type DeleteTrainOutput struct {
+	Status string `json:"status"`
+}
+
+func DeleteTrain(c *gin.Context, in *DeleteTrainInput) (*DeleteTrainOutput, error) {
+	if err := database.DeleteTrain(in.ID); err != nil {
+		return nil, err
+	}
+	return &DeleteTrainOutput{
+		Status: "train deleted successfully",
 	}, nil
 }
