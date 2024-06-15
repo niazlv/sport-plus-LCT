@@ -105,6 +105,7 @@ func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, err
 		Icon:             in.Icon,
 		About:            in.About,
 		Achivements:      in.Achivements,
+		Age:              in.Age,
 	}
 
 	// Обновляем пользователя в базе данных
