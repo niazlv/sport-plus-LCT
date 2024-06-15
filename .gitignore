@@ -1,6 +1,5 @@
 docker/storage/
 storage/
-**/*.env
 **/.obsidian/*
 uploads/*
 !uploads/.gitkeep

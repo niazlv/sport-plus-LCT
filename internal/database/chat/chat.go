@@ -17,13 +17,24 @@ type Chat struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type AttachableType string
+
+type Attachment struct {
+  Id int `gorm:"primaryKey" json:"id"`
+  AttachableType AttachableType `json:"attachable_type"`
+  AttachableId int `json:"attachable_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Message struct {
 	Id        int       `gorm:"primaryKey" json:"id"`
 	ChatId    int       `json:"chat_id"`
 	UserId    int       `json:"user_id"`
 	Content   string    `json:"content"`
+  Attachments []Attachment `json:"attachments"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
 
 var db *gorm.DB
 
@@ -49,7 +60,7 @@ func InitDB() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&Chat{}, &Message{})
+	err = db.AutoMigrate(&Chat{}, &Message{}, &Attachment{})
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +104,7 @@ func CreateMessage(message *Message) (*Message, error) {
 
 func GetMessagesByChatID(chatID int) ([]Message, error) {
 	var messages []Message
-	result := db.Where("chat_id = ?", chatID).Find(&messages)
+	result := db.Preload("Attachments").Where("chat_id = ?", chatID).Find(&messages)
 	if result.Error != nil {
 		return nil, result.Error
 	}
