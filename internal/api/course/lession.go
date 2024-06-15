@@ -1,5 +1,3 @@
-// internal/api/course/lesson.go
-
 package course
 
 import (
@@ -10,6 +8,7 @@ import (
 	"github.com/loopfz/gadgeto/tonic"
 	"github.com/niazlv/sport-plus-LCT/internal/api/auth"
 	"github.com/niazlv/sport-plus-LCT/internal/database/course"
+	"github.com/niazlv/sport-plus-LCT/internal/database/exercise"
 	"github.com/wI2L/fizz"
 	"gorm.io/gorm"
 )
@@ -42,10 +41,7 @@ type GetLessonByIDParams struct {
 type CreateLessonInput struct {
 	CourseID        string `path:"course_id" validate:"required"`
 	ClassID         string `path:"class_id" validate:"required"`
-	Title           string `json:"title" binding:"required"`
-	Description     string `json:"description"`
-	Video           string `json:"video"`
-	Tips            string `json:"tips"`
+	ExerciseID      int    `json:"exercise_id" binding:"required"`
 	DurationSeconds int    `json:"duration_seconds"`
 }
 
@@ -53,10 +49,7 @@ type UpdateLessonInput struct {
 	CourseID        string `path:"course_id" binding:"required"`
 	ClassID         string `path:"class_id" binding:"required"`
 	ID              string `path:"lesson_id" binding:"required"`
-	Title           string `json:"title"`
-	Description     string `json:"description"`
-	Video           string `json:"video"`
-	Tips            string `json:"tips"`
+	ExerciseID      int    `json:"exercise_id"`
 	DurationSeconds int    `json:"duration_seconds"`
 }
 
@@ -70,7 +63,7 @@ func GetLessons(c *gin.Context, params *GetLessonsParams) (*LessonsOutput, error
 	log.Println("GetLessons called with class_id:", classID)
 
 	var lessons []course.Lesson
-	result := db.Preload("Images").Where("class_id = ?", classID).Find(&lessons)
+	result := db.Preload("Exercise.Photos").Where("class_id = ?", classID).Find(&lessons)
 	if result.Error != nil {
 		log.Println("Error retrieving lessons:", result.Error)
 		return nil, result.Error
@@ -87,7 +80,7 @@ func GetLessonByID(c *gin.Context, params *GetLessonByIDParams) (*LessonOutput, 
 	log.Println("GetLessonByID called with lesson_id:", lessonID)
 
 	var lesson course.Lesson
-	result := db.Preload("Images").First(&lesson, lessonID)
+	result := db.Preload("Exercise.Photos").First(&lesson, lessonID)
 	if result.Error != nil {
 		log.Println("Error retrieving lesson:", result.Error)
 		if result.Error == gorm.ErrRecordNotFound {
@@ -133,13 +126,21 @@ func CreateLesson(c *gin.Context, in *CreateLessonInput) (*LessonOutput, error) 
 		}
 	}
 
+	exercise, err := exercise.GetExerciseByID(in.ExerciseID)
+	if err != nil {
+		log.Println("Error retrieving exercise:", err)
+		return nil, &gin.Error{
+			Err:  err,
+			Type: gin.ErrorTypePublic,
+			Meta: gin.H{"error": "invalid exercise_id"},
+		}
+	}
+
 	newLesson := course.Lesson{
 		CourseID:        courseID,
 		ClassID:         classID,
-		Title:           in.Title,
-		Description:     in.Description,
-		Video:           in.Video,
-		Tips:            in.Tips,
+		ExerciseID:      exercise.Id,
+		Exercise:        *exercise,
 		DurationSeconds: in.DurationSeconds,
 	}
 
@@ -173,17 +174,14 @@ func UpdateLesson(c *gin.Context, in *UpdateLessonInput) (*LessonOutput, error) 
 		return nil, result.Error
 	}
 
-	if in.Title != "" {
-		lesson.Title = in.Title
-	}
-	if in.Description != "" {
-		lesson.Description = in.Description
-	}
-	if in.Video != "" {
-		lesson.Video = in.Video
-	}
-	if in.Tips != "" {
-		lesson.Tips = in.Tips
+	if in.ExerciseID != 0 {
+		exercise, err := exercise.GetExerciseByID(in.ExerciseID)
+		if err != nil {
+			log.Println("Error retrieving exercise:", err)
+			return nil, err
+		}
+		lesson.ExerciseID = exercise.Id
+		lesson.Exercise = *exercise
 	}
 	if in.DurationSeconds != 0 {
 		lesson.DurationSeconds = in.DurationSeconds

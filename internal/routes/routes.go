@@ -5,6 +5,7 @@ import (
 	"github.com/niazlv/sport-plus-LCT/internal/api/calendar"
 	"github.com/niazlv/sport-plus-LCT/internal/api/chat"
 	"github.com/niazlv/sport-plus-LCT/internal/api/course"
+	"github.com/niazlv/sport-plus-LCT/internal/api/exercise"
 	"github.com/niazlv/sport-plus-LCT/internal/api/upload"
 	"github.com/niazlv/sport-plus-LCT/internal/api/user"
 	"github.com/niazlv/sport-plus-LCT/internal/api/webrtc"
@@ -23,4 +24,5 @@ func Setup(f *fizz.Fizz) {
 	upload.SetupUploadRoutes(api)
 	chat.Setup(api)
 	webrtc.Setup(api)
+	exercise.Setup(api)
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/niazlv/sport-plus-LCT/internal/config"
+	"github.com/niazlv/sport-plus-LCT/internal/database/exercise"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -42,17 +43,14 @@ type Class struct {
 
 // Lesson модель урока
 type Lesson struct {
-	Id              int          `gorm:"primaryKey" json:"id"`
-	CourseID        int          `json:"course_id"`
-	ClassID         int          `json:"class_id"`
-	Title           string       `json:"title"`
-	Description     string       `json:"description"`
-	Video           string       `json:"video"`
-	Tips            string       `json:"tips"`
-	Images          []ClassImage `json:"images" gorm:"foreignKey:LessonID"`
-	DurationSeconds int          `json:"duration_seconds"`
-	CreatedAt       time.Time    `json:"created_at"`
-	UpdatedAt       time.Time    `json:"updated_at"`
+	Id              int               `gorm:"primaryKey" json:"id"`
+	CourseID        int               `json:"course_id"`
+	ClassID         int               `json:"class_id"`
+	ExerciseID      int               `json:"exercise_id"`
+	Exercise        exercise.Exercise `json:"exercise" gorm:"foreignKey:ExerciseID"`
+	DurationSeconds int               `json:"duration_seconds"`
+	CreatedAt       time.Time         `json:"created_at"`
+	UpdatedAt       time.Time         `json:"updated_at"`
 }
 
 // ClassImage модель изображения занятия
