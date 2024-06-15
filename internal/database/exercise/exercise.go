@@ -3,6 +3,7 @@ package exercise
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/niazlv/sport-plus-LCT/internal/config"
@@ -83,6 +84,7 @@ func GetExerciseByID(id int) (*Exercise, error) {
 		}
 		return nil, result.Error
 	}
+	log.Println(exercise)
 	return &exercise, nil
 }
 

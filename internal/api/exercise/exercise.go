@@ -48,7 +48,7 @@ func GetExercises(c *gin.Context) (*ExercisesOutput, error) {
 	log.Println("GetExercises called")
 
 	var exercises []exercise.Exercise
-	result := db.Find(&exercises)
+	result := db.Preload("Photos").Find(&exercises)
 	if result.Error != nil {
 		log.Println("Error retrieving exercises:", result.Error)
 		return nil, result.Error
