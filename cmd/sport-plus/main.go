@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/niazlv/sport-plus-LCT/internal/api/chat"
 	"github.com/niazlv/sport-plus-LCT/internal/routes"
 	swagger "github.com/num30/gin-swagger-ui"
 	"github.com/wI2L/fizz"
@@ -41,6 +42,11 @@ func main() {
 
 	// Now add a UI handler
 	swagger.AddOpenApiUIHandler(app, "swagger", "/openapi.json")
+
+	chat.InitSocketIO()
+
+	app.GET("/socket.io/*any", gin.WrapH(chat.Server))
+	app.POST("/socket.io/*any", gin.WrapH(chat.Server))
 
 	// Add handler
 	// Second parameter is additional open API info. It's not required and can be nil
