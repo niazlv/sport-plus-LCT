@@ -48,6 +48,7 @@ type User struct {
 	Icon             string        `json:"icon" body:"icon"`
 	About            string        `json:"about"`
 	Achivements      string        `json:"achivements"`
+	Age              int           `json:"age"`
 }
 
 var db *gorm.DB
