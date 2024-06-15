@@ -7,6 +7,7 @@ import (
 
 	"github.com/niazlv/sport-plus-LCT/internal/config"
 	"github.com/niazlv/sport-plus-LCT/internal/database/auth"
+	"github.com/niazlv/sport-plus-LCT/internal/database/course"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -62,7 +63,20 @@ func InitDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func CreateChat(chat *auth.Chat) (*auth.Chat, error) {
+type CreateChatFromCourseDto struct {
+  CourseId int
+  UserId int
+}
+
+func CreateChatFromCourse(dto *CreateChatFromCourseDto) (*auth.Chat, error) {
+  course := new(course.Course) // get course by id
+
+  chatName := course.Title
+
+  chat := &auth.Chat{
+    Name: chatName,
+  } // create chat for dto.UserId and course.TrainerId
+
 	result := db.Create(chat)
 	if result.Error != nil {
 		return nil, result.Error
