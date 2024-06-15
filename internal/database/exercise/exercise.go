@@ -109,3 +109,12 @@ func DeleteExercise(id int) error {
 	}
 	return nil
 }
+
+func FilterExercises(additionalMuscle string) ([]Exercise, error) {
+	var exercises []Exercise
+	result := db.Preload("Photos").Where("additional_muscle LIKE ?", "%"+additionalMuscle+"%").Find(&exercises)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return exercises, nil
+}

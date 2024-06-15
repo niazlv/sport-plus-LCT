@@ -27,6 +27,7 @@ func Setup(rg *fizz.RouterGroup) {
 
 	api.GET("", []fizz.OperationOption{fizz.Summary("Get list of exercises"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetExercises, 200))
 	api.GET("/:exercise_id", []fizz.OperationOption{fizz.Summary("Get exercise by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(GetExerciseByID, 200))
+	api.GET("/filter", []fizz.OperationOption{fizz.Summary("Filter exercises"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(FilterExercises, 200))
 	api.POST("", []fizz.OperationOption{fizz.Summary("Create a new exercise"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(CreateExercise, 201))
 	api.PUT("/:exercise_id", []fizz.OperationOption{fizz.Summary("Update exercise by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(UpdateExercise, 200))
 	api.DELETE("/:exercise_id", []fizz.OperationOption{fizz.Summary("Delete exercise by ID"), auth.BearerAuth}, auth.WithAuth, tonic.Handler(DeleteExercise, 204))
@@ -42,6 +43,12 @@ type ExercisesOutput struct {
 
 type GetExerciseByIDParams struct {
 	ID string `path:"exercise_id" binding:"required"`
+}
+
+type FilterExercisesParams struct {
+	AdditionalMuscle string `query:"additional_muscle"`
+	Muscle           string `query:"muscle"`
+	Difficulty       string `query:"difficulty"`
 }
 
 func GetExercises(c *gin.Context) (*ExercisesOutput, error) {
@@ -67,7 +74,7 @@ func GetExerciseByID(c *gin.Context, params *GetExerciseByIDParams) (*ExerciseOu
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Println("Invalid exercise ID:", idStr)
-		return nil, &gin.Error{
+		return nil, gin.Error{
 			Err:  errors.New("invalid exercise_id"),
 			Type: gin.ErrorTypePublic,
 			Meta: gin.H{"error": "invalid exercise_id"},
@@ -79,7 +86,7 @@ func GetExerciseByID(c *gin.Context, params *GetExerciseByIDParams) (*ExerciseOu
 	if result.Error != nil {
 		log.Println("Error retrieving exercise:", result.Error)
 		if result.Error == gorm.ErrRecordNotFound {
-			return nil, &gin.Error{
+			return nil, gin.Error{
 				Err:  result.Error,
 				Type: gin.ErrorTypePublic,
 				Meta: gin.H{"error": "exercise not found"},
@@ -91,6 +98,33 @@ func GetExerciseByID(c *gin.Context, params *GetExerciseByIDParams) (*ExerciseOu
 	log.Printf("Retrieved exercise: %+v\n", exercise)
 	return &ExerciseOutput{
 		Exercise: exercise,
+	}, nil
+}
+
+func FilterExercises(c *gin.Context, params *FilterExercisesParams) (*ExercisesOutput, error) {
+	log.Println("FilterExercises called with params:", params)
+
+	query := db.Preload("Photos")
+	if params.AdditionalMuscle != "" {
+		query = query.Where("additional_muscle LIKE ?", "%"+params.AdditionalMuscle+"%")
+	}
+	if params.Muscle != "" {
+		query = query.Where("muscle LIKE ?", "%"+params.Muscle+"%")
+	}
+	if params.Difficulty != "" {
+		query = query.Where("difficulty = ?", params.Difficulty)
+	}
+
+	var exercises []exercise.Exercise
+	result := query.Find(&exercises)
+	if result.Error != nil {
+		log.Println("Error retrieving exercises:", result.Error)
+		return nil, result.Error
+	}
+
+	log.Printf("Filtered exercises: %+v\n", exercises)
+	return &ExercisesOutput{
+		Exercises: exercises,
 	}, nil
 }
 
@@ -157,7 +191,7 @@ func UpdateExercise(c *gin.Context, in *UpdateExerciseInput) (*ExerciseOutput, e
 	if result.Error != nil {
 		log.Println("Error retrieving exercise:", result.Error)
 		if result.Error == gorm.ErrRecordNotFound {
-			return nil, &gin.Error{
+			return nil, gin.Error{
 				Err:  result.Error,
 				Type: gin.ErrorTypePublic,
 				Meta: gin.H{"error": "exercise not found"},
@@ -218,7 +252,7 @@ func DeleteExercise(c *gin.Context, params *DeleteExerciseParams) error {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Println("Invalid exercise ID:", idStr)
-		return &gin.Error{
+		return gin.Error{
 			Err:  errors.New("invalid exercise_id"),
 			Type: gin.ErrorTypePublic,
 			Meta: gin.H{"error": "invalid exercise_id"},
@@ -232,7 +266,7 @@ func DeleteExercise(c *gin.Context, params *DeleteExerciseParams) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return &gin.Error{
+		return gin.Error{
 			Err:  gorm.ErrRecordNotFound,
 			Type: gin.ErrorTypePublic,
 			Meta: gin.H{"error": "exercise not found"},

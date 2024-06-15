@@ -103,6 +103,8 @@ This project is currently in the development stage and is intended for the LCT h
 - [ ] course->class->lessions
 - [ ] решить циклическую зависимость auth<->chat и вынести chat из auth
 - [ ] TODO: createchatfromcourse. Чат для курса
+- [ ] перейти на другой socket.io
+- [x] фильтрация exercise
 
 ## Links
 

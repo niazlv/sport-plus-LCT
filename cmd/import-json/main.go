@@ -15,7 +15,7 @@ func main() {
 
 	jsonFilePath := folderPath + "/main_images.json"
 	// "http://sport-plus.sorewa.ru:8080/v1"
-	err := importer.ImportExercisesFromJSON(jsonFilePath, "http://localhost:8080/v1")
+	err := importer.ImportExercisesFromJSON(jsonFilePath, "http://sport-plus.sorewa.ru:8080/v1")
 	if err != nil {
 		log.Fatal("Error importing courses: ", err)
 	}
