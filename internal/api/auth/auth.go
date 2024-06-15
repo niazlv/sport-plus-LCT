@@ -274,6 +274,7 @@ func WithAuth(c *gin.Context) {
 	}
 	if User != nil {
 		c.Set("claims", claims)
+		c.Set("userID", int(claims["id"].(float64)))
 		c.Next()
 		return
 	}

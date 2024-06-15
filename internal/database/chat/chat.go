@@ -2,11 +2,13 @@
 package chat
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/niazlv/sport-plus-LCT/internal/config"
 	database_auth "github.com/niazlv/sport-plus-LCT/internal/database/auth"
+	"github.com/niazlv/sport-plus-LCT/internal/database/course"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -62,7 +64,20 @@ func InitDB() (*gorm.DB, error) {
 	return db, nil
 }
 
-func CreateChat(chat *database_auth.Chat) (*database_auth.Chat, error) {
+type CreateChatFromCourseDto struct {
+	CourseId int
+	UserId   int
+}
+
+func CreateChatFromCourse(dto *CreateChatFromCourseDto) (*database_auth.Chat, error) {
+	course := new(course.Course) // get course by id
+
+	chatName := course.Title
+
+	chat := &database_auth.Chat{
+		Name: chatName,
+	} // create chat for dto.UserId and course.TrainerId
+
 	result := db.Create(chat)
 	if result.Error != nil {
 		return nil, result.Error
@@ -146,4 +161,19 @@ func GetMessagesByChatID(chatID int) ([]Message, error) {
 		return nil, result.Error
 	}
 	return messages, nil
+}
+
+func GetChatByCourseAndUser(courseID int, userID int) (*database_auth.Chat, error) {
+	var chat database_auth.Chat
+	err := db.Joins("JOIN chat_users ON chat_users.chat_id = chats.id").
+		Joins("JOIN courses ON courses.trainer_id = chat_users.user_id").
+		Where("chat_users.user_id = ? AND courses.id = ?", userID, courseID).
+		First(&chat).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Возвращаем nil, если чат не найден
+		}
+		return nil, err // Возвращаем ошибку, если произошла другая ошибка
+	}
+	return &chat, nil
 }
