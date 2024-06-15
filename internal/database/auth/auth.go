@@ -221,6 +221,9 @@ func PartialUpdateUser(user *User) error {
 	if user.Achivements != "" {
 		updates["achivements"] = user.Achivements
 	}
+	if user.Age != 0 {
+		updates["age"] = user.Age
+	}
 
 	result := db.Model(&User{}).Where("id = ?", user.Id).Updates(updates)
 	if result.Error != nil {
