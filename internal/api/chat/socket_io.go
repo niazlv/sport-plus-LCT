@@ -1,7 +1,9 @@
 package chat
 
 import (
+	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +12,10 @@ import (
 )
 
 var Server *socketio.Server
+
+func GetRoomName(chatId int) string {
+  return fmt.Sprintf(`room-%s`, strconv.Itoa(chatId))
+}
 
 func InitSocketIO() {
 	Server = socketio.NewServer(nil)
@@ -20,20 +26,25 @@ func InitSocketIO() {
 	})
 
 	Server.OnEvent("/", "join_chat", func(s socketio.Conn, chatID int) {
-		s.Join(string(chatID))
+    // TODO savva
+    canJoin := database.CanJoinChat(chatID, 0);
+    if (!canJoin) {
+      return
+    }
+		s.Join(GetRoomName(chatID))
 		log.Printf("user %s joined chat %d", s.ID(), chatID)
 	})
 
-	Server.OnEvent("/", "message", func(s socketio.Conn, msg database.Message) {
-		msg.CreatedAt = time.Now()
-		createdMessage, err := database.CreateMessage(&msg)
+	Server.OnEvent("/", "message", func(s socketio.Conn, dto database.CreateMessageDto) {
+		dto.Message.CreatedAt = time.Now()
+		createdMessage, err := database.CreateMessage(&dto)
 		if err != nil {
 			s.Emit("error", err.Error())
 			return
 		}
 
 		// Broadcast the message to all users in the chat
-		Server.BroadcastToRoom("/", string(msg.ChatId), "message", createdMessage)
+		Server.BroadcastToRoom("/", GetRoomName(dto.Message.ChatId), "message", createdMessage)
 	})
 
 	Server.OnError("/", func(s socketio.Conn, e error) {
