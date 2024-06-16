@@ -164,17 +164,25 @@ func UpdateCourse(c *gin.Context, in *UpdateCourseInput) (*CourseOutput, error) 
 	log.Printf("UpdateCourse called with ID: %s and input: %+v\n", id, in)
 
 	var course course.Course
-	result := db.First(&course, id)
-	if result.Error != nil {
-		log.Println("Error retrieving course:", result.Error)
-		if result.Error == gorm.ErrRecordNotFound {
+	// result := db.First(&course, id)
+
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+
+	courses, err := database_course.GetCourseByID(idInt)
+	course = *courses
+	if err != nil {
+		log.Println("Error retrieving course:", err)
+		if err == gorm.ErrRecordNotFound {
 			return nil, &gin.Error{
-				Err:  result.Error,
+				Err:  err,
 				Type: gin.ErrorTypePublic,
 				Meta: gin.H{"error": "course not found"},
 			}
 		}
-		return nil, result.Error
+		return nil, err
 	}
 
 	if in.Title != "" {
@@ -208,7 +216,7 @@ func UpdateCourse(c *gin.Context, in *UpdateCourseInput) (*CourseOutput, error) 
 		course.RequiredTools = in.RequiredTools
 	}
 
-	result = db.Save(&course)
+	result := db.Save(&course)
 	if result.Error != nil {
 		log.Println("Error updating course:", result.Error)
 		return nil, result.Error
