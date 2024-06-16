@@ -1,6 +1,12 @@
 # Sport+
 
+README in [Russian language](/README-RU.md)
+
 This is the SPORT+ app backend for the LCT hackathon 2024. The project is currently in the development stage.
+
+## Overview
+
+The Sport+ backend is designed to support trainers in creating and managing their courses, which users can then access and participate in. The application provides several features including user management, course creation, class scheduling, chat functionality, and more. It is built with a focus on clean architecture and utilizes modern technologies for seamless integration and scalability.
 
 ## Main Development
 
@@ -44,7 +50,7 @@ HASURA_GRAPHQL_ADMIN_SECRET=12Qwerty123!
 cd ..
 ```
 
-or copy and rename `dev.example.env` and edit by your requirements:
+Or copy and rename `dev.example.env` and edit by your requirements:
 
 ```bash
 mkdir env
@@ -56,12 +62,18 @@ vim dev.env
 Run the Docker Compose file:
 
 ```bash
-docker-compose -f docker/dev.docker-compose.yml up -d --build
+COMPOSE_PROJECT_NAME=sport-plus docker-compose -f docker/dev.docker-compose.yml up -d --build
+```
+
+or just run:
+
+```bash
+make start-dev
 ```
 
 Now you can access the backend at: [http://localhost:8080/v1](http://localhost:8080/v1)
 
-## Documentation and urls
+## Documentation and URLs
 
 - [openAPI.json](http://sport-plus.sorewa.ru:8080/openapi.json)
 - [Swagger UI](http://sport-plus.sorewa.ru:8080/swagger)
@@ -76,6 +88,17 @@ Now you can access the backend at: [http://localhost:8080/v1](http://localhost:8
 - **ORM:** GORM
 - **Database:** PostgreSQL
 - **Containerization:** Docker, Docker Compose
+- **CI/CD:** GitLab CI/CD
+
+## Features
+
+- **User Management:** Allows trainers and users to sign up, sign in, and manage their profiles.
+- **Course Management:** Trainers can create and manage courses, which include classes, lessons, and exercises.
+- **Chat Functionality:** Users can participate in chats related to their courses.
+- **Calendar Integration:** Users can schedule and view their training sessions.
+- **File Uploads:** Supports uploading of images and other files.
+- **Authentication:** Utilizes JWT tokens for secure authentication and authorization.
+- **Real-Time Communication:** Implements WebRTC for real-time communication features.
 
 ## Project Status
 
@@ -86,36 +109,36 @@ This project is currently in the development stage and is intended for the LCT h
 - [x] auth/signup
 - [x] auth/signin
 - [x] JWT tokens
-- [ ] написать свой Logger, с записью в логи с ротацией логов
+- [ ] Implement custom Logger with log rotation
 - [x] user
 - [x] swagger
-- [ ] вынести участки кода в пакеты(user,auth)
-- [ ] JWT вынести из(auth)
-- [ ] JWT tokens переделать под RS256
-- [x] добавить /auth/onboarding? (database.User) PUT
-- [ ] fizz/tonic. Починить коды ошибок.
-- [x] README.md. Дописать открытую документацию на запуск и о проекте, что использую.
-- [x] Перенести TODO LIST в проект
-- [ ] Переписать docker
+- [ ] Refactor code into packages (user, auth)
+- [ ] Decouple JWT from auth
+- [ ] Switch JWT tokens to RS256
+- [x] Add /auth/onboarding? (database.User) PUT
+- [ ] Fix error codes in fizz/tonic
+- [x] Complete README.md with detailed project and setup information
+- [x] Move TODO LIST to project management
+- [ ] Rewrite Docker files
   - [ ] docker file
   - [ ] docker compose
-- [ ] Дописать LICENCE
-- [ ] Добавить защит от дурака, при обращении к БД(в частности для auth, user, getUserByID)
+- [ ] Add LICENSE
+- [ ] Add input validation for database operations (particularly for auth, user, getUserByID)
 - [x] chat
-	- [x] rewrite socket.io
-	- [x] delete endpont send messages
-	- [x] broadcast message from user to all (chatid, messageid, message)
-	- [x] one socket, send chatid when user connect.
-	- [x] attachments "string"
+	- [x] Rewrite socket.io
+	- [x] Remove endpoint for sending messages
+	- [x] Broadcast messages from user to all (chatid, messageid, message)
+	- [x] One socket, send chatid when user connects
+	- [x] Attachments as "string"
 - [x] webrtc
-- [x] course->class->lessions
-- [ ] решить циклическую зависимость auth<->chat и вынести chat из auth
-- [ ] TODO: createchatfromcourse. Чат для курса
-- [ ] перейти на другой socket.io
-- [x] фильтрация exercise
-- [x] in lessons can be more than one exercise. Make []exercise
-	- [x] Update put method
-- [ ] fix progress/status working
+- [x] course->class->lessons
+- [ ] Resolve cyclic dependency between auth and chat, and decouple chat from auth
+- [ ] Create chat for courses (createchatfromcourse)
+- [ ] Switch to an alternative socket.io implementation
+- [x] Exercise filtering
+- [x] Allow multiple exercises in lessons. Implement as []exercise
+	- [x] Update PUT method
+- [ ] Fix progress/status functionality
 
 ## Links
 
