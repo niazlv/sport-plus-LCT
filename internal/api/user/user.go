@@ -131,6 +131,9 @@ func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, err
 	if err := database.SaveMeasurements(in.Weight, user.Id, database.TypeWeight); err != nil {
 		return nil, err
 	}
+	if err := database.SaveMeasurements(in.Water, user.Id, database.TypeWater); err != nil {
+		return nil, err
+	}
 
 	return &putOnboardingOutput{Status: "user updated successfully"}, nil
 }
