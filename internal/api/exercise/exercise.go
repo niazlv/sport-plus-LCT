@@ -137,6 +137,7 @@ type CreateExerciseInput struct {
 	Equipment        string   `json:"equipment" binding:"required"`
 	Difficulty       string   `json:"difficulty" binding:"required"`
 	Photos           []string `json:"photos"`
+	Duration         int      `json:"duration"`
 }
 
 func CreateExercise(c *gin.Context, in *CreateExerciseInput) (*ExerciseOutput, error) {
@@ -156,6 +157,7 @@ func CreateExercise(c *gin.Context, in *CreateExerciseInput) (*ExerciseOutput, e
 		Equipment:        in.Equipment,
 		Difficulty:       in.Difficulty,
 		Photos:           photos,
+		Duration:         in.Duration,
 	}
 
 	result := db.Create(&newExercise)
@@ -180,6 +182,7 @@ type UpdateExerciseInput struct {
 	Equipment        string   `json:"equipment"`
 	Difficulty       string   `json:"difficulty"`
 	Photos           []string `json:"photos"`
+	Duration         int      `json:"duration"`
 }
 
 func UpdateExercise(c *gin.Context, in *UpdateExerciseInput) (*ExerciseOutput, error) {
@@ -220,6 +223,9 @@ func UpdateExercise(c *gin.Context, in *UpdateExerciseInput) (*ExerciseOutput, e
 	}
 	if in.Difficulty != "" {
 		exercise.Difficulty = in.Difficulty
+	}
+	if in.Duration != 0 {
+		exercise.Duration = in.Duration
 	}
 	if len(in.Photos) > 0 {
 		photos := make([]exercise_class.Photo, len(in.Photos))
