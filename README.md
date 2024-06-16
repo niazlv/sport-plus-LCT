@@ -32,18 +32,25 @@ POSTGRES_PASSWORD=postgres
 POSTGRES_DB=postgres 
 
 COMPOSE_PROJECT_NAME=sport-plus
-DB_HOST=docker-db-1 
+DB_HOST=${COMPOSE_PROJECT_NAME}_postgres-db-1 
 DB_PORT=5432 
 
 JWT_SECRET=my-super-secret-key
-
-
-HASURA_GRAPHQL_DATABASE_URL:postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
-HASURA_GRAPHQL_ENABLE_CONSOLE:true
-HASURA_GRAPHQL_DEV_MODE:true
-HASURA_GRAPHQL_ADMIN_SECRET:12Qwerty123!
+HASURA_GRAPHQL_DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
+HASURA_GRAPHQL_ENABLE_CONSOLE=true
+HASURA_GRAPHQL_DEV_MODE=true
+HASURA_GRAPHQL_ADMIN_SECRET=12Qwerty123!
 " > dev.env
 cd ..
+```
+
+or copy and rename `dev.example.env` and edit by your requirements:
+
+```bash
+mkdir env
+cd env
+cp dev.example.env dev.env
+vim dev.env
 ```
 
 Run the Docker Compose file:
@@ -78,7 +85,8 @@ This project is currently in the development stage and is intended for the LCT h
 
 - [x] auth/signup
 - [x] auth/signin
-- [ ] JWT tokens
+- [x] JWT tokens
+- [ ] написать свой Logger, с записью в логи с ротацией логов
 - [x] user
 - [x] swagger
 - [ ] вынести участки кода в пакеты(user,auth)
@@ -105,6 +113,9 @@ This project is currently in the development stage and is intended for the LCT h
 - [ ] TODO: createchatfromcourse. Чат для курса
 - [ ] перейти на другой socket.io
 - [x] фильтрация exercise
+- [x] in lessons can be more than one exercise. Make []exercise
+	- [x] Update put method
+- [ ] fix progress/status working
 
 ## Links
 
