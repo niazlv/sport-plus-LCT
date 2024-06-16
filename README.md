@@ -100,7 +100,7 @@ This project is currently in the development stage and is intended for the LCT h
 	- [x] one socket, send chatid when user connect.
 	- [x] attachments "string"
 - [x] webrtc
-- [ ] course->class->lessions
+- [x] course->class->lessions
 - [ ] решить циклическую зависимость auth<->chat и вынести chat из auth
 - [ ] TODO: createchatfromcourse. Чат для курса
 - [ ] перейти на другой socket.io
