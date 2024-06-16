@@ -21,6 +21,7 @@ type Exercise struct {
 	Type             string    `json:"type"`
 	Equipment        string    `json:"equipment"`
 	Difficulty       string    `json:"difficulty"`
+	Duration         int       `json:"duration"`
 	Photos           []Photo   `json:"photos" gorm:"foreignKey:ExerciseID"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
