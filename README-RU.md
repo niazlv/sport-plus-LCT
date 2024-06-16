@@ -28,6 +28,9 @@ git clone https://github.com/niazlv/sport-plus-LCT.git
 cd sport-plus-LCT
 ```
 
+(опционально) загрузить базу данных (вручную): https://disk.yandex.ru/d/3Rf5SjySDyRzzA.
+И прочитайте файл [README.md](https://disk.yandex.ru/d/Ci8IIBQI9UKyeA) в этом архиве
+
 Создайте конфигурационный файл в каталоге `env`, например, создайте `dev.env`:
 
 ```bash

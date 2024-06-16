@@ -28,6 +28,9 @@ Navigate into the project directory:
 cd sport-plus-LCT
 ```
 
+(optional) download database(manually): https://disk.yandex.ru/d/3Rf5SjySDyRzzA
+And read [README.md](https://disk.yandex.ru/d/Ci8IIBQI9UKyeA) file in this archive
+
 Create a configuration file in the `env` directory, for example, create `dev.env`:
 
 ```bash
