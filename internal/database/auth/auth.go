@@ -340,3 +340,16 @@ func DeleteTrain(id int) error {
 	}
 	return nil
 }
+
+func SaveMeasurements(measurements []Measurement, userID int, measurementType string) error {
+	for _, measurement := range measurements {
+		measurement.UserID = userID
+		measurement.Type = measurementType
+
+		// Сохраняем в базу данных
+		if err := db.Save(&measurement).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}

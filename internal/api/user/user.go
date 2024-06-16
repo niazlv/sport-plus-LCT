@@ -124,6 +124,14 @@ func putOnboarding(c *gin.Context, in *database.User) (*putOnboardingOutput, err
 		}
 	}
 
+	// Сохраняем измерения роста и веса
+	if err := database.SaveMeasurements(in.Height, user.Id, database.TypeHeight); err != nil {
+		return nil, err
+	}
+	if err := database.SaveMeasurements(in.Weight, user.Id, database.TypeWeight); err != nil {
+		return nil, err
+	}
+
 	return &putOnboardingOutput{Status: "user updated successfully"}, nil
 }
 
