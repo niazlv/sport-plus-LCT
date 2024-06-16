@@ -34,7 +34,7 @@ func main() {
 	infos := &openapi.Info{
 		Title:       "Sport Plus",
 		Description: "Sport plus API, for LCT Hackaton 2024",
-		Version:     "0.2",
+		Version:     "0.3",
 	}
 
 	// Create an endpoint for openapi.json file

@@ -76,23 +76,29 @@ func GetClassByID(c *gin.Context, params *GetClassByIDParams) (*ClassOutput, err
 	classID := params.ID
 	log.Println("GetClassByID called with class_id:", classID)
 
-	var class course.Class
-	result := db.First(&class, classID)
-	if result.Error != nil {
-		log.Println("Error retrieving class:", result.Error)
-		if result.Error == gorm.ErrRecordNotFound {
+	classIDInt, err := strconv.Atoi(classID)
+	if err != nil {
+		return nil, err
+	}
+
+	var class *course.Class
+	class, err = course.GetClassByID(classIDInt)
+	//result := db.First(&class, classID)
+	if err != nil {
+		log.Println("Error retrieving class:", err)
+		if err == gorm.ErrRecordNotFound {
 			return nil, &gin.Error{
-				Err:  result.Error,
+				Err:  err,
 				Type: gin.ErrorTypePublic,
 				Meta: gin.H{"error": "class not found"},
 			}
 		}
-		return nil, result.Error
+		return nil, err
 	}
 
 	log.Printf("Retrieved class: %+v\n", class)
 	return &ClassOutput{
-		Class: class,
+		Class: *class,
 	}, nil
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/loopfz/gadgeto/tonic"
 	"github.com/niazlv/sport-plus-LCT/internal/api/auth"
 	"github.com/niazlv/sport-plus-LCT/internal/database/course"
+	database_course "github.com/niazlv/sport-plus-LCT/internal/database/course"
 	"github.com/wI2L/fizz"
 	"gorm.io/gorm"
 )
@@ -75,23 +76,23 @@ func GetCourseByID(c *gin.Context, params *GetCourseByIDParams) (*CourseOutput, 
 		}
 	}
 
-	var course course.Course
-	result := db.Preload("Classes.Images").First(&course, id)
-	if result.Error != nil {
-		log.Println("Error retrieving course:", result.Error)
-		if result.Error == gorm.ErrRecordNotFound {
+	var course *course.Course
+	course, err = database_course.GetCourseByID(id)
+	if err != nil {
+		log.Println("Error retrieving course:", err)
+		if err == gorm.ErrRecordNotFound {
 			return nil, &gin.Error{
-				Err:  result.Error,
+				Err:  err,
 				Type: gin.ErrorTypePublic,
 				Meta: gin.H{"error": "course not found"},
 			}
 		}
-		return nil, result.Error
+		return nil, err
 	}
 
 	log.Printf("Retrieved course: %+v\n", course)
 	return &CourseOutput{
-		Course: course,
+		Course: *course,
 	}, nil
 }
 

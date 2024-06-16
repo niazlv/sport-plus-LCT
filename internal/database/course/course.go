@@ -43,14 +43,21 @@ type Class struct {
 
 // Lesson модель урока
 type Lesson struct {
-	Id              int               `gorm:"primaryKey" json:"id"`
-	CourseID        int               `json:"course_id"`
-	ClassID         int               `json:"class_id"`
-	ExerciseID      int               `json:"exercise_id"`
-	Exercise        exercise.Exercise `json:"exercise" gorm:"foreignKey:ExerciseID"`
-	DurationSeconds int               `json:"duration_seconds"`
-	CreatedAt       time.Time         `json:"created_at"`
-	UpdatedAt       time.Time         `json:"updated_at"`
+	Id              int              `gorm:"primaryKey" json:"id"`
+	CourseID        int              `json:"course_id"`
+	ClassID         int              `json:"class_id"`
+	DurationSeconds int              `json:"duration_seconds"`
+	CreatedAt       time.Time        `json:"created_at"`
+	UpdatedAt       time.Time        `json:"updated_at"`
+	Exercises       []LessonExercise `json:"exercises" gorm:"foreignKey:LessonID"`
+}
+
+// LessonExercise модель связи между уроком и упражнением
+type LessonExercise struct {
+	Id         int               `gorm:"primaryKey" json:"id"`
+	LessonID   int               `json:"lesson_id"`
+	ExerciseID int               `json:"exercise_id"`
+	Exercise   exercise.Exercise `json:"exercise" gorm:"foreignKey:ExerciseID"`
 }
 
 // ClassImage модель изображения занятия
@@ -84,7 +91,7 @@ func InitDB() (*gorm.DB, error) {
 		return nil, errors.New("failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&Course{}, &Class{}, &Lesson{}, &ClassImage{})
+	err = db.AutoMigrate(&Course{}, &Class{}, &Lesson{}, &ClassImage{}, &LessonExercise{})
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +111,7 @@ func CreateLesson(lesson *Lesson) (*Lesson, error) {
 
 func GetLessonByID(id int) (*Lesson, error) {
 	var lesson Lesson
-	result := db.Preload("Images").Where("id = ?", id).First(&lesson)
+	result := db.Preload("Exercises.Exercise.Photos").Where("id = ?", id).First(&lesson)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -122,6 +129,14 @@ func UpdateLesson(lesson *Lesson) error {
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
+
+	// Обновление упражнений
+	db.Where("lesson_id = ?", lesson.Id).Delete(&LessonExercise{})
+	for _, exercise := range lesson.Exercises {
+		exercise.LessonID = lesson.Id
+		db.Create(&exercise)
+	}
+
 	return nil
 }
 
@@ -133,6 +148,7 @@ func DeleteLesson(id int) error {
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}
+	db.Where("lesson_id = ?", id).Delete(&LessonExercise{})
 	return nil
 }
 
@@ -148,7 +164,7 @@ func CreateCourse(course *Course) (*Course, error) {
 
 func GetCourseByID(id int) (*Course, error) {
 	var course Course
-	result := db.Preload("Classes").Where("id = ?", id).First(&course)
+	result := db.Preload("Classes").Preload("Classes.Lessons").Where("id = ?", id).First(&course)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil

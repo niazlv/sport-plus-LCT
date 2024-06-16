@@ -38,19 +38,23 @@ type GetLessonByIDParams struct {
 	ID       string `path:"lesson_id" binding:"required"`
 }
 
+type LessonExerciseInput struct {
+	ExerciseID int `json:"exercise_id" binding:"required"`
+}
+
 type CreateLessonInput struct {
-	CourseID        string `path:"course_id" validate:"required"`
-	ClassID         string `path:"class_id" validate:"required"`
-	ExerciseID      int    `json:"exercise_id" binding:"required"`
-	DurationSeconds int    `json:"duration_seconds"`
+	CourseID        string                `path:"course_id" validate:"required"`
+	ClassID         string                `path:"class_id" validate:"required"`
+	Exercises       []LessonExerciseInput `json:"exercises" binding:"required,dive"`
+	DurationSeconds int                   `json:"duration_seconds"`
 }
 
 type UpdateLessonInput struct {
-	CourseID        string `path:"course_id" binding:"required"`
-	ClassID         string `path:"class_id" binding:"required"`
-	ID              string `path:"lesson_id" binding:"required"`
-	ExerciseID      int    `json:"exercise_id"`
-	DurationSeconds int    `json:"duration_seconds"`
+	CourseID        string                `path:"course_id" binding:"required"`
+	ClassID         string                `path:"class_id" binding:"required"`
+	ID              string                `path:"lesson_id" binding:"required"`
+	Exercises       []LessonExerciseInput `json:"exercises"`
+	DurationSeconds int                   `json:"duration_seconds"`
 }
 
 type GetLessonsParams struct {
@@ -126,22 +130,28 @@ func CreateLesson(c *gin.Context, in *CreateLessonInput) (*LessonOutput, error) 
 		}
 	}
 
-	exercise, err := exercise.GetExerciseByID(in.ExerciseID)
-	if err != nil {
-		log.Println("Error retrieving exercise:", err)
-		return nil, &gin.Error{
-			Err:  err,
-			Type: gin.ErrorTypePublic,
-			Meta: gin.H{"error": "invalid exercise_id"},
+	var exercises []course.LessonExercise
+	for _, ex := range in.Exercises {
+		exercise, err := exercise.GetExerciseByID(ex.ExerciseID)
+		if err != nil {
+			log.Println("Error retrieving exercise:", err)
+			return nil, &gin.Error{
+				Err:  err,
+				Type: gin.ErrorTypePublic,
+				Meta: gin.H{"error": "invalid exercise_id"},
+			}
 		}
+		exercises = append(exercises, course.LessonExercise{
+			ExerciseID: ex.ExerciseID,
+			Exercise:   *exercise,
+		})
 	}
 
 	newLesson := course.Lesson{
 		CourseID:        courseID,
 		ClassID:         classID,
-		ExerciseID:      exercise.Id,
-		Exercise:        *exercise,
 		DurationSeconds: in.DurationSeconds,
+		Exercises:       exercises,
 	}
 
 	result := db.Create(&newLesson)
@@ -174,17 +184,24 @@ func UpdateLesson(c *gin.Context, in *UpdateLessonInput) (*LessonOutput, error) 
 		return nil, result.Error
 	}
 
-	if in.ExerciseID != 0 {
-		exercise, err := exercise.GetExerciseByID(in.ExerciseID)
-		if err != nil {
-			log.Println("Error retrieving exercise:", err)
-			return nil, err
-		}
-		lesson.ExerciseID = exercise.Id
-		lesson.Exercise = *exercise
-	}
 	if in.DurationSeconds != 0 {
 		lesson.DurationSeconds = in.DurationSeconds
+	}
+
+	if len(in.Exercises) > 0 {
+		var exercises []course.LessonExercise
+		for _, ex := range in.Exercises {
+			exercise, err := exercise.GetExerciseByID(ex.ExerciseID)
+			if err != nil {
+				log.Println("Error retrieving exercise:", err)
+				return nil, err
+			}
+			exercises = append(exercises, course.LessonExercise{
+				ExerciseID: ex.ExerciseID,
+				Exercise:   *exercise,
+			})
+		}
+		lesson.Exercises = exercises
 	}
 
 	result = db.Save(&lesson)
